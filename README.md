@@ -30,3 +30,30 @@ git fetch template && git checkout template/main .github
 При мёрже ветки с инкрементом в основную ветку `main` будут запускаться все автотесты.
 
 Подробнее про локальный и автоматический запуск читайте в [README автотестов](https://github.com/Yandex-Practicum/go-autotests).
+
+## Сборка
+
+Не забыть добавить go и shortenertest в PATH:
+```bash
+source ~/.profile
+```
+
+Запустить сервер:
+```bash
+cd cmd/shortener
+
+go build -o shortener *.go \
+    && ./shortener
+```
+
+Запустить тест:
+```bash
+shortenertest -test.v -test.run=^TestIteration1$ -binary-path=cmd/shortener/shortener
+```
+
+Работа с URLом:
+```bash
+curl -X POST -d 'https://practicum.yandex.ru/' -i localhost:8080
+
+curl -i localhost:8080/EwHXdJfB
+```

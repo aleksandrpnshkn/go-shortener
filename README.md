@@ -48,7 +48,8 @@ go build -o shortener *.go \
 
 Запустить тест:
 ```bash
-shortenertest -test.v -test.run=^TestIteration1$ -binary-path=cmd/shortener/shortener
+go build -o shortener *.go \
+    && shortenertest -test.v -test.run=^TestIteration1$ -binary-path=./shortener
 ```
 
 Работа с URLом:

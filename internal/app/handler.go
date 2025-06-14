@@ -7,6 +7,8 @@ import (
 
 func getUrlByCode(app application) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
+		res.Header().Add("Content-Type", "text/plain")
+
 		code := req.PathValue("code")
 		url, ok := app.codesToURLs[code]
 
@@ -15,7 +17,6 @@ func getUrlByCode(app application) http.HandlerFunc {
 			return
 		}
 
-		res.Header().Add("Content-Type", "text/plain")
 		res.Header().Add("Location", url)
 		res.WriteHeader(http.StatusTemporaryRedirect)
 	}

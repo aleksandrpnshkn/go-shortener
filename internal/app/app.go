@@ -39,8 +39,8 @@ func Run() {
 		codesToURLs: make(map[string]string),
 	}
 
-	mux.HandleFunc("GET /{code}", getUrlByCode(app))
-	mux.HandleFunc("POST /", createShortUrl(app))
+	mux.HandleFunc("GET /{code}", getURLByCode(app))
+	mux.HandleFunc("POST /", createShortURL(app))
 	mux.HandleFunc("/", fallbackHandler())
 
 	err := http.ListenAndServe(app.config.hostname, mux)

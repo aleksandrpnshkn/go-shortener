@@ -1,23 +1,27 @@
 package app
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestGetUrlByCode(t *testing.T) {
+func TestGetURLByCode(t *testing.T) {
 	existedCode := "tEsT"
-	fullUrl := "http://example.com"
+	fullURL := "http://example.com"
 
 	app := application{
 		config: config{
 			hostname: "localhost",
 			schema:   "http",
 		},
-		codesToURLs: map[string]string{existedCode: fullUrl},
+		codesToURLs: map[string]string{existedCode: fullURL},
 	}
 
 	t.Run("existed short url", func(t *testing.T) {
@@ -25,12 +29,15 @@ func TestGetUrlByCode(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/"+existedCode, nil)
 		req.SetPathValue("code", existedCode)
 
-		getUrlByCode(app)(w, req)
+		getURLByCode(app)(w, req)
 
 		res := w.Result()
+		err := res.Body.Close()
+		require.NoError(t, err)
+
 		assert.Equal(t, http.StatusTemporaryRedirect, res.StatusCode, "has redirect")
 		assert.Equal(t, "text/plain", res.Header.Get("Content-Type"))
-		assert.Equal(t, fullUrl, res.Header.Get("Location"), "redirects to original url")
+		assert.Equal(t, fullURL, res.Header.Get("Location"), "redirects to original url")
 	})
 
 	t.Run("unknown short url", func(t *testing.T) {
@@ -40,16 +47,68 @@ func TestGetUrlByCode(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/"+unknownCode, nil)
 		req.SetPathValue("code", unknownCode)
 
-		getUrlByCode(app)(w, req)
+		getURLByCode(app)(w, req)
 
 		res := w.Result()
+		err := res.Body.Close()
+		require.NoError(t, err)
+
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode, "has no redirect")
 		assert.Equal(t, "text/plain", res.Header.Get("Content-Type"))
 		assert.Empty(t, res.Header.Get("Location"))
 	})
 }
 
-// Эндпоинт с методом POST и путём /
-// возвращает ответ с кодом 201 и сокращённым URL как text/plain
+func TestCreateShortURL(t *testing.T) {
+	fullURL := "http://example.com"
 
-// На любой некорректный запрос сервер должен возвращать ответ с кодом 400.
+	app := application{
+		config: config{
+			hostname: "localhost",
+			schema:   "http",
+		},
+		codesToURLs: map[string]string{},
+	}
+
+	t.Run("create short url", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		reqBody := strings.NewReader(fullURL)
+		req := httptest.NewRequest(http.MethodPost, "/", reqBody)
+
+		createShortURL(app)(w, req)
+
+		res := w.Result()
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
+		assert.Equal(t, "text/plain", res.Header.Get("Content-Type"))
+
+		resBody, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		err = res.Body.Close()
+		require.NoError(t, err)
+
+		rawShortURL := string(resBody)
+		assert.Contains(t, rawShortURL, "http://localhost", "contains hostname")
+
+		shortURL, err := url.Parse(rawShortURL)
+		require.NoError(t, err, "response contains correct short url")
+		code := strings.TrimLeft(shortURL.Path, "/")
+		assert.Equal(t, 1, len(app.codesToURLs), "new code stored")
+		assert.Contains(t, app.codesToURLs, code, "new code stored")
+	})
+}
+
+func TestGetFallback(t *testing.T) {
+	t.Run("existed short url", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodDelete, "/", nil)
+
+		fallbackHandler()(w, req)
+
+		res := w.Result()
+		err := res.Body.Close()
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		assert.Equal(t, "text/plain", res.Header.Get("Content-Type"))
+	})
+}

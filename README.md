@@ -48,8 +48,12 @@ go build -o shortener *.go \
 
 Запустить тест:
 ```bash
+# template
 go build -o shortener *.go \
     && shortenertest -test.v -test.run=^TestIteration1$ -binary-path=./shortener
+
+# mine
+go test -v ./internal/app
 ```
 
 Работа с URLом:

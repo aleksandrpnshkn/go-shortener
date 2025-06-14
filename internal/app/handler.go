@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func getUrlByCode(app application) http.HandlerFunc {
+func getURLByCode(app application) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")
 
@@ -22,7 +22,7 @@ func getUrlByCode(app application) http.HandlerFunc {
 	}
 }
 
-func createShortUrl(app application) http.HandlerFunc {
+func createShortURL(app application) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		URL, err := io.ReadAll(req.Body)
 

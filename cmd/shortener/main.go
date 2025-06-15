@@ -1,7 +1,11 @@
 package main
 
-import "github.com/aleksandrpnshkn/go-shortener/internal/app"
+import (
+	"github.com/aleksandrpnshkn/go-shortener/internal/app"
+	"github.com/aleksandrpnshkn/go-shortener/internal/config"
+)
 
 func main() {
-	app.Run()
+	config := config.InitConfig()
+	app.Run(config)
 }

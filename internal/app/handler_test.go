@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aleksandrpnshkn/go-shortener/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,9 +18,9 @@ func TestGetURLByCode(t *testing.T) {
 	fullURL := "http://example.com"
 
 	app := application{
-		config: config{
-			hostname: "localhost",
-			schema:   "http",
+		config: config.Config{
+			ServerAddr:    "localhost",
+			PublicBaseURL: "http://localhost",
 		},
 		codesToURLs: map[string]string{existedCode: fullURL},
 	}
@@ -63,9 +64,9 @@ func TestCreateShortURL(t *testing.T) {
 	fullURL := "http://example.com"
 
 	app := application{
-		config: config{
-			hostname: "localhost",
-			schema:   "http",
+		config: config.Config{
+			ServerAddr:    "localhost",
+			PublicBaseURL: "http://localhost",
 		},
 		codesToURLs: map[string]string{},
 	}
@@ -92,6 +93,7 @@ func TestCreateShortURL(t *testing.T) {
 		shortURL, err := url.Parse(rawShortURL)
 		require.NoError(t, err, "response contains correct short url")
 		code := strings.TrimLeft(shortURL.Path, "/")
+		assert.NotEmpty(t, code, "has code")
 		assert.Equal(t, 1, len(app.codesToURLs), "new code stored")
 		assert.Contains(t, app.codesToURLs, code, "new code stored")
 	})

@@ -40,7 +40,7 @@ func createShortURL(app application) http.HandlerFunc {
 
 		app.codesToURLs[code] = string(URL)
 
-		shortURL := app.config.schema + "://" + app.config.hostname + "/" + code
+		shortURL := app.config.PublicBaseURL + "/" + code
 
 		res.Header().Add("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusCreated)

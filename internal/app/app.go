@@ -4,16 +4,12 @@ import (
 	"math/rand"
 	"net/http"
 
+	"github.com/aleksandrpnshkn/go-shortener/internal/config"
 	"github.com/go-chi/chi/v5"
 )
 
-type config struct {
-	schema   string
-	hostname string
-}
-
 type application struct {
-	config      config
+	config      config.Config
 	codesToURLs map[string]string
 }
 
@@ -28,13 +24,8 @@ func randStringRunes(n int) string {
 	return string(b)
 }
 
-func Run() {
+func Run(config config.Config) {
 	router := chi.NewRouter()
-
-	config := config{
-		schema:   "http",
-		hostname: "localhost:8080",
-	}
 
 	app := application{
 		config:      config,
@@ -45,8 +36,7 @@ func Run() {
 	router.Post("/", createShortURL(app))
 	router.Get("/", fallbackHandler())
 
-	err := http.ListenAndServe(app.config.hostname, router)
-
+	err := http.ListenAndServe(app.config.ServerAddr, router)
 	if err != nil {
 		panic(err)
 	}

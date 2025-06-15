@@ -49,6 +49,7 @@ go build -o shortener *.go \
 Запустить тест:
 ```bash
 # template
+# Параметры запуска итераций разные, можно чекнуть .github/workflows/metricstest.yml
 go build -o shortener *.go \
     && shortenertest -test.v -test.run=^TestIteration1$ -binary-path=./shortener
 

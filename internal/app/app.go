@@ -3,6 +3,8 @@ package app
 import (
 	"math/rand"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type config struct {
@@ -27,7 +29,7 @@ func randStringRunes(n int) string {
 }
 
 func Run() {
-	mux := http.NewServeMux()
+	router := chi.NewRouter()
 
 	config := config{
 		schema:   "http",
@@ -39,11 +41,11 @@ func Run() {
 		codesToURLs: make(map[string]string),
 	}
 
-	mux.HandleFunc("GET /{code}", getURLByCode(app))
-	mux.HandleFunc("POST /", createShortURL(app))
-	mux.HandleFunc("/", fallbackHandler())
+	router.Get("/{code}", getURLByCode(app))
+	router.Post("/", createShortURL(app))
+	router.Get("/", fallbackHandler())
 
-	err := http.ListenAndServe(app.config.hostname, mux)
+	err := http.ListenAndServe(app.config.hostname, router)
 
 	if err != nil {
 		panic(err)

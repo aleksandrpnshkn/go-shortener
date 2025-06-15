@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"os"
 	"strings"
 )
 
@@ -22,6 +23,16 @@ func InitConfig() Config {
 	config.PublicBaseURL = strings.TrimRight(config.PublicBaseURL, "/")
 
 	flag.Parse()
+
+	envServerAddr := os.Getenv("SERVER_ADDRESS")
+	if envServerAddr != "" {
+		config.ServerAddr = envServerAddr
+	}
+
+	envPublicBaseURL := os.Getenv("BASE_URL")
+	if envPublicBaseURL != "" {
+		config.PublicBaseURL = envPublicBaseURL
+	}
 
 	return config
 }

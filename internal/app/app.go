@@ -9,7 +9,7 @@ import (
 )
 
 type application struct {
-	config      config.Config
+	config      *config.Config
 	codesToURLs map[string]string
 }
 
@@ -24,7 +24,7 @@ func randStringRunes(n int) string {
 	return string(b)
 }
 
-func Run(config config.Config) {
+func Run(config *config.Config) {
 	router := chi.NewRouter()
 
 	app := application{

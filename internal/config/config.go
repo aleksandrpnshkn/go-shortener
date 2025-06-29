@@ -11,7 +11,7 @@ type Config struct {
 	PublicBaseURL string
 }
 
-func InitConfig() Config {
+func New() *Config {
 	config := Config{
 		ServerAddr:    "localhost:8080",
 		PublicBaseURL: "http://localhost:8080",
@@ -34,5 +34,5 @@ func InitConfig() Config {
 		config.PublicBaseURL = envPublicBaseURL
 	}
 
-	return config
+	return &config
 }

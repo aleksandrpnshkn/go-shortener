@@ -18,7 +18,7 @@ func TestGetURLByCode(t *testing.T) {
 	fullURL := "http://example.com"
 
 	app := application{
-		config: config.Config{
+		config: &config.Config{
 			ServerAddr:    "localhost",
 			PublicBaseURL: "http://localhost",
 		},
@@ -64,7 +64,7 @@ func TestCreateShortURL(t *testing.T) {
 	fullURL := "http://example.com"
 
 	app := application{
-		config: config.Config{
+		config: &config.Config{
 			ServerAddr:    "localhost",
 			PublicBaseURL: "http://localhost",
 		},

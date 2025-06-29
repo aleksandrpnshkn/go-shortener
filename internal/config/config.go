@@ -9,12 +9,14 @@ import (
 type Config struct {
 	ServerAddr    string
 	PublicBaseURL string
+	LogLevel      string
 }
 
-func InitConfig() Config {
+func New() *Config {
 	config := Config{
 		ServerAddr:    "localhost:8080",
 		PublicBaseURL: "http://localhost:8080",
+		LogLevel:      "info",
 	}
 
 	flag.StringVar(&config.ServerAddr, "a", config.ServerAddr, "Net address host:port")
@@ -34,5 +36,10 @@ func InitConfig() Config {
 		config.PublicBaseURL = envPublicBaseURL
 	}
 
-	return config
+	envLogLevel := os.Getenv("LOG_LEVEL")
+	if envLogLevel != "" {
+		config.LogLevel = envLogLevel
+	}
+
+	return &config
 }

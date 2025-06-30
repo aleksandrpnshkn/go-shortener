@@ -24,6 +24,8 @@ func getURLByCode(app application) http.HandlerFunc {
 
 func createShortURL(app application) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
+		res.Header().Add("Content-Type", "text/plain")
+
 		URL, err := io.ReadAll(req.Body)
 
 		if err != nil {
@@ -42,7 +44,6 @@ func createShortURL(app application) http.HandlerFunc {
 
 		shortURL := app.config.PublicBaseURL + "/" + code
 
-		res.Header().Add("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusCreated)
 		res.Write([]byte(shortURL))
 	}

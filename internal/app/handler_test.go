@@ -1,11 +1,8 @@
 package app
 
 import (
-	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
@@ -57,45 +54,6 @@ func TestGetURLByCode(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode, "has no redirect")
 		assert.Equal(t, "text/plain", res.Header.Get("Content-Type"))
 		assert.Empty(t, res.Header.Get("Location"))
-	})
-}
-
-func TestCreateShortURL(t *testing.T) {
-	fullURL := "http://example.com"
-
-	app := application{
-		config: &config.Config{
-			ServerAddr:    "localhost",
-			PublicBaseURL: "http://localhost",
-		},
-		codesToURLs: map[string]string{},
-	}
-
-	t.Run("create short url", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		reqBody := strings.NewReader(fullURL)
-		req := httptest.NewRequest(http.MethodPost, "/", reqBody)
-
-		createShortURL(app)(w, req)
-
-		res := w.Result()
-		assert.Equal(t, http.StatusCreated, res.StatusCode)
-		assert.Equal(t, "text/plain", res.Header.Get("Content-Type"))
-
-		resBody, err := io.ReadAll(res.Body)
-		require.NoError(t, err)
-		err = res.Body.Close()
-		require.NoError(t, err)
-
-		rawShortURL := string(resBody)
-		assert.Contains(t, rawShortURL, "http://localhost", "contains hostname")
-
-		shortURL, err := url.Parse(rawShortURL)
-		require.NoError(t, err, "response contains correct short url")
-		code := strings.TrimLeft(shortURL.Path, "/")
-		assert.NotEmpty(t, code, "has code")
-		assert.Equal(t, 1, len(app.codesToURLs), "new code stored")
-		assert.Contains(t, app.codesToURLs, code, "new code stored")
 	})
 }
 

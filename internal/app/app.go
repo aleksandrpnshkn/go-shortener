@@ -1,30 +1,22 @@
 package app
 
 import (
-	"math/rand"
 	"net/http"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
+	"github.com/aleksandrpnshkn/go-shortener/internal/handlers"
 	"github.com/aleksandrpnshkn/go-shortener/internal/log"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
+
+const codesLength = 8
 
 type application struct {
 	config      *config.Config
 	logger      *zap.Logger
 	codesToURLs map[string]string
-}
-
-var codeRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
-
-// https://stackoverflow.com/a/31832326
-func randStringRunes(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = codeRunes[rand.Intn(len(codeRunes))]
-	}
-	return string(b)
 }
 
 func Run(config *config.Config, logger *zap.Logger) {
@@ -36,10 +28,18 @@ func Run(config *config.Config, logger *zap.Logger) {
 		codesToURLs: make(map[string]string),
 	}
 
+	codeGenerator := services.NewCodeGenerator(codesLength)
+	fullURLsStorage := services.NewFullURLsStorage()
+	shortener := services.NewShortener(
+		*codeGenerator,
+		*fullURLsStorage,
+		app.config.PublicBaseURL,
+	)
+
 	router.Use(log.NewRequestMiddleware(logger))
 
 	router.Get("/{code}", getURLByCode(app))
-	router.Post("/", createShortURL(app))
+	router.Post("/", handlers.CreateShortURL(shortener))
 	router.Get("/", fallbackHandler())
 
 	logger.Info("Running app...")

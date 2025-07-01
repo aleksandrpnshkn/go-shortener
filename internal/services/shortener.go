@@ -2,7 +2,7 @@ package services
 
 type Shortener struct {
 	codeGenerator CodeGenerator
-	urlsStorage   FullURLsStorage
+	urlsStorage   *FullURLsStorage
 	baseURL       string
 }
 
@@ -22,7 +22,7 @@ func (s *Shortener) Shorten(URL FullURL) string {
 
 func NewShortener(
 	codeGenerator CodeGenerator,
-	urlsStorage FullURLsStorage,
+	urlsStorage *FullURLsStorage,
 	baseURL string,
 ) *Shortener {
 	shortener := Shortener{

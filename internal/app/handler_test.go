@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/config"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,20 +14,15 @@ func TestGetURLByCode(t *testing.T) {
 	existedCode := "tEsT"
 	fullURL := "http://example.com"
 
-	app := application{
-		config: &config.Config{
-			ServerAddr:    "localhost",
-			PublicBaseURL: "http://localhost",
-		},
-		codesToURLs: map[string]string{existedCode: fullURL},
-	}
+	fullURLsStorage := services.NewFullURLsStorage()
+	fullURLsStorage.Set(services.Code(existedCode), services.FullURL(fullURL))
 
 	t.Run("existed short url", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/"+existedCode, nil)
 		req.SetPathValue("code", existedCode)
 
-		getURLByCode(app)(w, req)
+		getURLByCode(fullURLsStorage)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()
@@ -45,7 +40,7 @@ func TestGetURLByCode(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/"+unknownCode, nil)
 		req.SetPathValue("code", unknownCode)
 
-		getURLByCode(app)(w, req)
+		getURLByCode(fullURLsStorage)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()

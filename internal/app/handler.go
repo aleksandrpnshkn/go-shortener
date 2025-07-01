@@ -2,21 +2,23 @@ package app
 
 import (
 	"net/http"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 )
 
-func getURLByCode(app application) http.HandlerFunc {
+func getURLByCode(fullURLsStorage *services.FullURLsStorage) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")
 
-		code := req.PathValue("code")
-		url, ok := app.codesToURLs[code]
+		code := services.Code(req.PathValue("code"))
+		url, ok := fullURLsStorage.Get(code)
 
 		if !ok {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		res.Header().Add("Location", url)
+		res.Header().Add("Location", string(url))
 		res.WriteHeader(http.StatusTemporaryRedirect)
 	}
 }

@@ -15,17 +15,36 @@ func randStringRunes(n int) string {
 
 type Code string
 
-type CodeGenerator struct {
+type CodeGenerator interface {
+	Generate() Code
+}
+
+type RandomCodeGenerator struct {
 	codeLength int
 }
 
-func (c *CodeGenerator) Generate() Code {
+func (c *RandomCodeGenerator) Generate() Code {
 	return Code(randStringRunes(c.codeLength))
 }
 
-func NewCodeGenerator(codeLength int) *CodeGenerator {
-	generator := CodeGenerator{
+func NewRandomCodeGenerator(codeLength int) CodeGenerator {
+	generator := RandomCodeGenerator{
 		codeLength: codeLength,
+	}
+	return &generator
+}
+
+type TestCodeGenerator struct {
+	testCode string
+}
+
+func (c *TestCodeGenerator) Generate() Code {
+	return Code(c.testCode)
+}
+
+func NewTestGenerator(testCode string) CodeGenerator {
+	generator := TestCodeGenerator{
+		testCode: testCode,
 	}
 	return &generator
 }

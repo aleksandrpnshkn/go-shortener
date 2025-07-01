@@ -26,9 +26,9 @@ func Run(config *config.Config, logger *zap.Logger) {
 
 	router.Use(log.NewRequestMiddleware(logger))
 
-	router.Get("/{code}", getURLByCode(fullURLsStorage))
+	router.Get("/{code}", handlers.GetURLByCode(fullURLsStorage))
 	router.Post("/", handlers.CreateShortURLPlain(shortener))
-	router.Get("/", fallbackHandler())
+	router.Get("/", handlers.FallbackHandler())
 
 	router.Post("/api/shorten", handlers.CreateShortURL(shortener))
 

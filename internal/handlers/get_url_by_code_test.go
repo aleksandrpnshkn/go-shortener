@@ -1,4 +1,4 @@
-package app
+package handlers
 
 import (
 	"net/http"
@@ -22,7 +22,7 @@ func TestGetURLByCode(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/"+existedCode, nil)
 		req.SetPathValue("code", existedCode)
 
-		getURLByCode(fullURLsStorage)(w, req)
+		GetURLByCode(fullURLsStorage)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()
@@ -40,7 +40,7 @@ func TestGetURLByCode(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/"+unknownCode, nil)
 		req.SetPathValue("code", unknownCode)
 
-		getURLByCode(fullURLsStorage)(w, req)
+		GetURLByCode(fullURLsStorage)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()
@@ -49,21 +49,5 @@ func TestGetURLByCode(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode, "has no redirect")
 		assert.Equal(t, "text/plain", res.Header.Get("Content-Type"))
 		assert.Empty(t, res.Header.Get("Location"))
-	})
-}
-
-func TestGetFallback(t *testing.T) {
-	t.Run("existed short url", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodDelete, "/", nil)
-
-		fallbackHandler()(w, req)
-
-		res := w.Result()
-		err := res.Body.Close()
-		require.NoError(t, err)
-
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-		assert.Equal(t, "text/plain", res.Header.Get("Content-Type"))
 	})
 }

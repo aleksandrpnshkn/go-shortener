@@ -5,7 +5,7 @@ import (
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
 	"github.com/aleksandrpnshkn/go-shortener/internal/handlers"
-	"github.com/aleksandrpnshkn/go-shortener/internal/log"
+	"github.com/aleksandrpnshkn/go-shortener/internal/middlewares"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -24,7 +24,7 @@ func Run(config *config.Config, logger *zap.Logger) {
 		config.PublicBaseURL,
 	)
 
-	router.Use(log.NewRequestMiddleware(logger))
+	router.Use(middlewares.NewRequestMiddleware(logger))
 
 	router.Get("/{code}", handlers.GetURLByCode(fullURLsStorage))
 	router.Post("/", handlers.CreateShortURLPlain(shortener))

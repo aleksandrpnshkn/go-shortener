@@ -1,50 +1,25 @@
 package app
 
 import (
-	"io"
 	"net/http"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 )
 
-func getURLByCode(app application) http.HandlerFunc {
+func getURLByCode(fullURLsStorage *services.FullURLsStorage) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")
 
-		code := req.PathValue("code")
-		url, ok := app.codesToURLs[code]
+		code := services.Code(req.PathValue("code"))
+		url, ok := fullURLsStorage.Get(code)
 
 		if !ok {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		res.Header().Add("Location", url)
+		res.Header().Add("Location", string(url))
 		res.WriteHeader(http.StatusTemporaryRedirect)
-	}
-}
-
-func createShortURL(app application) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		URL, err := io.ReadAll(req.Body)
-
-		if err != nil {
-			res.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		defer req.Body.Close()
-
-		var code string
-		for codeExists := true; codeExists; {
-			code = randStringRunes(8)
-			_, codeExists = app.codesToURLs[code]
-		}
-
-		app.codesToURLs[code] = string(URL)
-
-		shortURL := app.config.PublicBaseURL + "/" + code
-
-		res.Header().Add("Content-Type", "text/plain")
-		res.WriteHeader(http.StatusCreated)
-		res.Write([]byte(shortURL))
 	}
 }
 

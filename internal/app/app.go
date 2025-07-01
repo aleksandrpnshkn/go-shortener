@@ -1,42 +1,40 @@
 package app
 
 import (
-	"math/rand"
 	"net/http"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
+	"github.com/aleksandrpnshkn/go-shortener/internal/handlers"
+	"github.com/aleksandrpnshkn/go-shortener/internal/log"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 )
 
-type application struct {
-	config      config.Config
-	codesToURLs map[string]string
-}
+const codesLength = 8
 
-var codeRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
-
-// https://stackoverflow.com/a/31832326
-func randStringRunes(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = codeRunes[rand.Intn(len(codeRunes))]
-	}
-	return string(b)
-}
-
-func Run(config config.Config) {
+func Run(config *config.Config, logger *zap.Logger) {
 	router := chi.NewRouter()
 
-	app := application{
-		config:      config,
-		codesToURLs: make(map[string]string),
-	}
+	codeGenerator := services.NewRandomCodeGenerator(codesLength)
+	fullURLsStorage := services.NewFullURLsStorage()
+	shortener := services.NewShortener(
+		codeGenerator,
+		fullURLsStorage,
+		config.PublicBaseURL,
+	)
 
-	router.Get("/{code}", getURLByCode(app))
-	router.Post("/", createShortURL(app))
+	router.Use(log.NewRequestMiddleware(logger))
+
+	router.Get("/{code}", getURLByCode(fullURLsStorage))
+	router.Post("/", handlers.CreateShortURLPlain(shortener))
 	router.Get("/", fallbackHandler())
 
-	err := http.ListenAndServe(app.config.ServerAddr, router)
+	router.Post("/api/shorten", handlers.CreateShortURL(shortener))
+
+	logger.Info("Running app...")
+
+	err := http.ListenAndServe(config.ServerAddr, router)
 	if err != nil {
 		panic(err)
 	}

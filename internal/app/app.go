@@ -24,7 +24,8 @@ func Run(config *config.Config, logger *zap.Logger) {
 		config.PublicBaseURL,
 	)
 
-	router.Use(middlewares.NewRequestMiddleware(logger))
+	router.Use(middlewares.NewLogMiddleware(logger))
+	router.Use(middlewares.CompressMiddleware)
 
 	router.Get("/{code}", handlers.GetURLByCode(fullURLsStorage))
 	router.Post("/", handlers.CreateShortURLPlain(shortener))

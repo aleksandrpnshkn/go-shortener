@@ -61,5 +61,7 @@ go test ./...
 ```bash
 curl -X POST -d 'https://practicum.yandex.ru/' -i localhost:8080
 
+curl -X POST -H "Content-Type: application/json" -d '{"url": "https://practicum.yandex.ru/"}' --compressed -i localhost:8080/api/shorten
+
 curl -i localhost:8080/EwHXdJfB
 ```

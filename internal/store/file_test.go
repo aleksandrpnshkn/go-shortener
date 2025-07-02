@@ -18,7 +18,7 @@ func TestFileStorage(t *testing.T) {
 		require.NoError(t, err)
 		defer fileStorage.Close()
 
-		assert.Equal(t, 2, fileStorage.lastId, "last id loaded")
+		assert.Equal(t, 2, fileStorage.lastID, "last id loaded")
 
 		originalURL, isFound := fileStorage.Get("test2")
 

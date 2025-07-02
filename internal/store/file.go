@@ -13,20 +13,20 @@ type FileStorage struct {
 	writer  *bufio.Writer
 	cache   map[string]string
 
-	lastId        int
+	lastID        int
 	lineSeparator rune
 }
 
 type ShortenedURLEntry struct {
 	UUID        int    `json:"uuid"`
-	ShortUrl    string `json:"short_url"`
+	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }
 
 func (f *FileStorage) Set(shortURL string, originalURL string) error {
 	entry := ShortenedURLEntry{
-		UUID:        f.incrementId(),
-		ShortUrl:    shortURL,
+		UUID:        f.incrementID(),
+		ShortURL:    shortURL,
 		OriginalURL: originalURL,
 	}
 
@@ -53,9 +53,9 @@ func (f *FileStorage) Close() {
 	f.file.Close()
 }
 
-func (f *FileStorage) incrementId() int {
-	f.lastId++
-	return f.lastId
+func (f *FileStorage) incrementID() int {
+	f.lastID++
+	return f.lastID
 }
 
 func (f *FileStorage) writeLine(line []byte) error {
@@ -103,10 +103,10 @@ func (f *FileStorage) load() error {
 			return errors.New("bad key in file: " + err.Error())
 		}
 
-		f.cache[entry.ShortUrl] = entry.OriginalURL
+		f.cache[entry.ShortURL] = entry.OriginalURL
 
-		if f.lastId < entry.UUID {
-			f.lastId = entry.UUID
+		if f.lastID < entry.UUID {
+			f.lastID = entry.UUID
 		}
 	}
 }
@@ -125,7 +125,7 @@ func NewFileStorage(fileName string) (*FileStorage, error) {
 		writer:  bufio.NewWriter(file),
 		cache:   map[string]string{},
 
-		lastId:        0,
+		lastID:        0,
 		lineSeparator: '\n',
 	}
 

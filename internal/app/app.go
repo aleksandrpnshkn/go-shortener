@@ -26,6 +26,7 @@ func Run(config *config.Config, logger *zap.Logger, store store.Storage) {
 	)
 
 	router.Use(middlewares.NewLogMiddleware(logger))
+	router.Use(middlewares.DecompressMiddleware)
 	router.Use(middlewares.CompressMiddleware)
 
 	router.Get("/{code}", handlers.GetURLByCode(URLsStorage))

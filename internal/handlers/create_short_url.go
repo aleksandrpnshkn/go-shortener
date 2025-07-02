@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -80,8 +79,6 @@ func CreateShortURL(
 			writeError(res)
 			return
 		}
-
-		fmt.Println("test")
 
 		res.WriteHeader(http.StatusCreated)
 		res.Write(rawResponseData)

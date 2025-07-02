@@ -17,7 +17,7 @@ func TestCreateShortURLPlain(t *testing.T) {
 	code := "tEsT"
 
 	codeGenerator := services.NewTestGenerator(code)
-	fullURLsStorage := services.NewFullURLsStorage()
+	fullURLsStorage := services.NewFullURLsTestStorage()
 	shortener := services.NewShortener(
 		codeGenerator,
 		fullURLsStorage,
@@ -79,7 +79,7 @@ func TestCreateShort(t *testing.T) {
 
 	for _, test := range tests {
 		codeGenerator := services.NewTestGenerator(code)
-		fullURLsStorage := services.NewFullURLsStorage()
+		fullURLsStorage := services.NewFullURLsTestStorage()
 		shortener := services.NewShortener(
 			codeGenerator,
 			fullURLsStorage,

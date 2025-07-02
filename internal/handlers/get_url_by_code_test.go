@@ -14,7 +14,7 @@ func TestGetURLByCode(t *testing.T) {
 	existedCode := "tEsT"
 	fullURL := "http://example.com"
 
-	fullURLsStorage := services.NewFullURLsStorage()
+	fullURLsStorage := services.NewFullURLsTestStorage()
 	fullURLsStorage.Set(services.Code(existedCode), services.FullURL(fullURL))
 
 	t.Run("existed short url", func(t *testing.T) {

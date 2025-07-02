@@ -7,17 +7,18 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/handlers"
 	"github.com/aleksandrpnshkn/go-shortener/internal/middlewares"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
 const codesLength = 8
 
-func Run(config *config.Config, logger *zap.Logger) {
+func Run(config *config.Config, logger *zap.Logger, store store.Store) {
 	router := chi.NewRouter()
 
 	codeGenerator := services.NewRandomCodeGenerator(codesLength)
-	fullURLsStorage := services.NewFullURLsStorage()
+	fullURLsStorage := services.NewFullURLsStorage(store)
 	shortener := services.NewShortener(
 		codeGenerator,
 		fullURLsStorage,

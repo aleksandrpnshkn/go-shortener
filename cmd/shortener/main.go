@@ -4,6 +4,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/app"
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
 	"github.com/aleksandrpnshkn/go-shortener/internal/log"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store"
 )
 
 func main() {
@@ -15,5 +16,10 @@ func main() {
 	}
 	defer logger.Sync()
 
-	app.Run(config, logger)
+	fileStore, err := store.NewFileStore(config.FileStoragePath)
+	if err != nil {
+		panic("failed to init app store")
+	}
+
+	app.Run(config, logger, fileStore)
 }

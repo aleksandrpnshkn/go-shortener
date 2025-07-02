@@ -15,7 +15,7 @@ import (
 
 const codesLength = 8
 
-func Run(config *config.Config, logger *zap.Logger, store store.Storage) {
+func Run(config *config.Config, logger *zap.Logger, store store.Storage) error {
 	router := chi.NewRouter()
 
 	codeGenerator := services.NewRandomCodeGenerator(codesLength)
@@ -38,8 +38,5 @@ func Run(config *config.Config, logger *zap.Logger, store store.Storage) {
 
 	logger.Info("Running app...")
 
-	err := http.ListenAndServe(config.ServerAddr, router)
-	if err != nil {
-		panic(err)
-	}
+	return http.ListenAndServe(config.ServerAddr, router)
 }

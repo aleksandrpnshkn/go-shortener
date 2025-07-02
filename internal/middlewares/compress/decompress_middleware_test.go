@@ -1,4 +1,4 @@
-package middlewares
+package compress
 
 import (
 	"io"
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDeompressMiddleware(t *testing.T) {
+func TestDecompressMiddleware(t *testing.T) {
 	testText := `{"hello": "world"}`
 	testStatus := http.StatusOK
 	handler := DecompressMiddleware(testEchoHandler(testStatus))

@@ -6,6 +6,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
 	"github.com/aleksandrpnshkn/go-shortener/internal/handlers"
 	"github.com/aleksandrpnshkn/go-shortener/internal/middlewares"
+	"github.com/aleksandrpnshkn/go-shortener/internal/middlewares/compress"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -26,8 +27,8 @@ func Run(config *config.Config, logger *zap.Logger, store store.Storage) {
 	)
 
 	router.Use(middlewares.NewLogMiddleware(logger))
-	router.Use(middlewares.DecompressMiddleware)
-	router.Use(middlewares.CompressMiddleware)
+	router.Use(compress.DecompressMiddleware)
+	router.Use(compress.CompressMiddleware)
 
 	router.Get("/{code}", handlers.GetURLByCode(URLsStorage))
 	router.Post("/", handlers.CreateShortURLPlain(shortener))

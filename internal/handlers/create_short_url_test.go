@@ -17,10 +17,10 @@ func TestCreateShortURLPlain(t *testing.T) {
 	code := "tEsT"
 
 	codeGenerator := services.NewTestGenerator(code)
-	fullURLsStorage := services.NewFullURLsTestStorage()
+	URLsStorage := services.NewURLsTestStorage()
 	shortener := services.NewShortener(
 		codeGenerator,
-		fullURLsStorage,
+		URLsStorage,
 		"http://localhost",
 	)
 
@@ -43,7 +43,7 @@ func TestCreateShortURLPlain(t *testing.T) {
 		rawShortURL := string(resBody)
 		assert.Equal(t, "http://localhost/tEsT", rawShortURL, "returned short url")
 
-		storedURL, _ := fullURLsStorage.Get(services.Code(code))
+		storedURL, _ := URLsStorage.Get(services.Code(code))
 		assert.Equal(t, fullURL, string(storedURL), "new code stored")
 	})
 }
@@ -79,10 +79,10 @@ func TestCreateShort(t *testing.T) {
 
 	for _, test := range tests {
 		codeGenerator := services.NewTestGenerator(code)
-		fullURLsStorage := services.NewFullURLsTestStorage()
+		URLsStorage := services.NewURLsTestStorage()
 		shortener := services.NewShortener(
 			codeGenerator,
-			fullURLsStorage,
+			URLsStorage,
 			"http://localhost",
 		)
 

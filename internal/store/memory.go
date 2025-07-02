@@ -1,21 +1,21 @@
 package store
 
-type MemoryStore struct {
+type MemoryStorage struct {
 	cache map[string]string
 }
 
-func (m *MemoryStore) Get(key string) (value string, isFound bool) {
+func (m *MemoryStorage) Get(key string) (value string, isFound bool) {
 	value, ok := m.cache[key]
 	return value, ok
 }
 
-func (m *MemoryStore) Set(key string, value string) error {
+func (m *MemoryStorage) Set(key string, value string) error {
 	m.cache[key] = value
 	return nil
 }
 
-func NewMemoryStore() *MemoryStore {
-	return &MemoryStore{
+func NewMemoryStorage() *MemoryStorage {
+	return &MemoryStorage{
 		cache: map[string]string{},
 	}
 }

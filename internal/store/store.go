@@ -1,7 +1,7 @@
 package store
 
-type Store interface {
-	Set(key string, value string) error
+type Storage interface {
+	Set(shortURL string, originalURL string) error
 
-	Get(key string) (value string, isFound bool)
+	Get(shortURL string) (originalURL string, isFound bool)
 }

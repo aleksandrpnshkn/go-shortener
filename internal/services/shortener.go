@@ -2,11 +2,11 @@ package services
 
 type Shortener struct {
 	codeGenerator CodeGenerator
-	urlsStorage   *FullURLsStorage
+	urlsStorage   *URLsStorage
 	baseURL       string
 }
 
-func (s *Shortener) Shorten(URL FullURL) string {
+func (s *Shortener) Shorten(URL OriginalURL) string {
 	var code Code
 	for codeExists := true; codeExists; {
 		code = s.codeGenerator.Generate()
@@ -22,7 +22,7 @@ func (s *Shortener) Shorten(URL FullURL) string {
 
 func NewShortener(
 	codeGenerator CodeGenerator,
-	urlsStorage *FullURLsStorage,
+	urlsStorage *URLsStorage,
 	baseURL string,
 ) *Shortener {
 	shortener := Shortener{

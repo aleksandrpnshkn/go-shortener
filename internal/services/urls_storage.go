@@ -2,29 +2,27 @@ package services
 
 import "github.com/aleksandrpnshkn/go-shortener/internal/store"
 
-type FullURL string
+type OriginalURL string
 
-type FullURLsStorage struct {
-	store store.Store
+type URLsStorage struct {
+	storage store.Storage
 }
 
-func (s *FullURLsStorage) Set(code Code, url FullURL) error {
-	return s.store.Set(string(code), string(url))
+func (s *URLsStorage) Set(code Code, url OriginalURL) error {
+	return s.storage.Set(string(code), string(url))
 }
 
-func (s *FullURLsStorage) Get(code Code) (url FullURL, isFound bool) {
-	value, isFound := s.store.Get(string(code))
-	return FullURL(value), isFound
+func (s *URLsStorage) Get(code Code) (url OriginalURL, isFound bool) {
+	originalURL, isFound := s.storage.Get(string(code))
+	return OriginalURL(originalURL), isFound
 }
 
-func NewFullURLsStorage(store store.Store) *FullURLsStorage {
-	fullURLsStorage := FullURLsStorage{
-		store: store,
+func NewURLsStorage(storage store.Storage) *URLsStorage {
+	return &URLsStorage{
+		storage: storage,
 	}
-
-	return &fullURLsStorage
 }
 
-func NewFullURLsTestStorage() *FullURLsStorage {
-	return NewFullURLsStorage(store.NewMemoryStore())
+func NewURLsTestStorage() *URLsStorage {
+	return NewURLsStorage(store.NewMemoryStorage())
 }

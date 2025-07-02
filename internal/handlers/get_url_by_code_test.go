@@ -14,15 +14,15 @@ func TestGetURLByCode(t *testing.T) {
 	existedCode := "tEsT"
 	fullURL := "http://example.com"
 
-	fullURLsStorage := services.NewFullURLsTestStorage()
-	fullURLsStorage.Set(services.Code(existedCode), services.FullURL(fullURL))
+	URLsStorage := services.NewURLsTestStorage()
+	URLsStorage.Set(services.Code(existedCode), services.OriginalURL(fullURL))
 
 	t.Run("existed short url", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/"+existedCode, nil)
 		req.SetPathValue("code", existedCode)
 
-		GetURLByCode(fullURLsStorage)(w, req)
+		GetURLByCode(URLsStorage)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()
@@ -40,7 +40,7 @@ func TestGetURLByCode(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/"+unknownCode, nil)
 		req.SetPathValue("code", unknownCode)
 
-		GetURLByCode(fullURLsStorage)(w, req)
+		GetURLByCode(URLsStorage)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()

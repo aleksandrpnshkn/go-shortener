@@ -2,50 +2,69 @@ package store
 
 import (
 	"bufio"
-	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"os"
-	"strings"
 )
 
-type FileStore struct {
+type FileStorage struct {
 	file    *os.File
 	scanner *bufio.Scanner
 	writer  *bufio.Writer
 	cache   map[string]string
 
-	keyValueSeparator rune
-	lineSeparator     rune
+	lastId        int
+	lineSeparator rune
 }
 
-func (f *FileStore) Set(key string, value string) error {
-	// дубли игнорим, на старте загрузится самый актуальный ключ
-	line := f.encodeKeyValueLine(key, value)
-	err := f.writeLine(line)
+type ShortenedURLEntry struct {
+	UUID        int    `json:"uuid"`
+	ShortUrl    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
+}
+
+func (f *FileStorage) Set(shortURL string, originalURL string) error {
+	entry := ShortenedURLEntry{
+		UUID:        f.incrementId(),
+		ShortUrl:    shortURL,
+		OriginalURL: originalURL,
+	}
+
+	line, err := json.Marshal(entry)
 	if err != nil {
 		return err
 	}
 
-	f.cache[key] = value
+	err = f.writeLine(line)
+	if err != nil {
+		return err
+	}
+
+	f.cache[shortURL] = originalURL
 	return nil
 }
 
-func (f *FileStore) Get(key string) (value string, isFound bool) {
-	value, ok := f.cache[key]
+func (f *FileStorage) Get(shortURL string) (originalURL string, isFound bool) {
+	value, ok := f.cache[shortURL]
 	return value, ok
 }
 
-func (f *FileStore) Close() {
+func (f *FileStorage) Close() {
 	f.file.Close()
 }
 
-func (f *FileStore) writeLine(line string) error {
-	_, err := f.writer.WriteString(line)
+func (f *FileStorage) incrementId() int {
+	f.lastId++
+	return f.lastId
+}
+
+func (f *FileStorage) writeLine(line []byte) error {
+	_, err := f.writer.Write(line)
 	if err != nil {
 		return err
 	}
 
-	err = f.writer.WriteByte(byte(f.lineSeparator))
+	_, err = f.writer.WriteRune(f.lineSeparator)
 	if err != nil {
 		return err
 	}
@@ -53,20 +72,20 @@ func (f *FileStore) writeLine(line string) error {
 	return f.writer.Flush()
 }
 
-func (f *FileStore) readLine() (keyValue string, isFinished bool, err error) {
+func (f *FileStorage) readLine() (entry []byte, isFinished bool, err error) {
 	if !f.scanner.Scan() {
 		err = f.scanner.Err()
 		isFinished := err == nil
 
-		return "", isFinished, err
+		return nil, isFinished, err
 	}
 
-	keyValue = f.scanner.Text()
+	entry = f.scanner.Bytes()
 
-	return keyValue, false, nil
+	return entry, false, nil
 }
 
-func (f *FileStore) load() error {
+func (f *FileStorage) load() error {
 	for {
 		line, isFinished, err := f.readLine()
 
@@ -78,47 +97,21 @@ func (f *FileStore) load() error {
 			return err
 		}
 
-		key, value, err := f.decodeKeyValueLine(line)
+		var entry ShortenedURLEntry
+		err = json.Unmarshal(line, &entry)
 		if err != nil {
-			return err
+			return errors.New("bad key in file: " + err.Error())
 		}
 
-		f.cache[key] = value
+		f.cache[entry.ShortUrl] = entry.OriginalURL
+
+		if f.lastId < entry.UUID {
+			f.lastId = entry.UUID
+		}
 	}
 }
 
-func (f *FileStore) encodeKeyValueLine(key string, value string) (line string) {
-	rawKey := base64.StdEncoding.EncodeToString([]byte(key))
-	rawValue := base64.StdEncoding.EncodeToString([]byte(value))
-
-	line = rawKey + string(f.keyValueSeparator) + rawValue
-
-	return line
-}
-
-func (f *FileStore) decodeKeyValueLine(line string) (key string, value string, err error) {
-	keyValue := strings.Split(line, ":")
-
-	if len(keyValue) != 2 {
-		return "", "", errors.New("bad key-value line in file")
-	}
-
-	rawKey, err := base64.StdEncoding.DecodeString(keyValue[0])
-	if err != nil {
-		return "", "", errors.New("bad key in file")
-	}
-	key = string(rawKey)
-
-	rawValue, err := base64.StdEncoding.DecodeString(keyValue[1])
-	if err != nil {
-		return "", "", errors.New("bad value in file")
-	}
-	value = string(rawValue)
-
-	return key, value, nil
-}
-
-func NewFileStore(fileName string) (*FileStore, error) {
+func NewFileStorage(fileName string) (*FileStorage, error) {
 	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0664)
 	if err != nil {
 		return nil, err
@@ -126,20 +119,20 @@ func NewFileStore(fileName string) (*FileStore, error) {
 
 	scanner := bufio.NewScanner(file)
 
-	fileStore := &FileStore{
+	fileStorage := &FileStorage{
 		file:    file,
 		scanner: scanner,
 		writer:  bufio.NewWriter(file),
 		cache:   map[string]string{},
 
-		keyValueSeparator: ':',
-		lineSeparator:     '\n',
+		lastId:        0,
+		lineSeparator: '\n',
 	}
 
-	err = fileStore.load()
+	err = fileStorage.load()
 	if err != nil {
 		return nil, err
 	}
 
-	return fileStore, nil
+	return fileStorage, nil
 }

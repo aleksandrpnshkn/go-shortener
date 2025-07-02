@@ -14,21 +14,21 @@ import (
 
 const codesLength = 8
 
-func Run(config *config.Config, logger *zap.Logger, store store.Store) {
+func Run(config *config.Config, logger *zap.Logger, store store.Storage) {
 	router := chi.NewRouter()
 
 	codeGenerator := services.NewRandomCodeGenerator(codesLength)
-	fullURLsStorage := services.NewFullURLsStorage(store)
+	URLsStorage := services.NewURLsStorage(store)
 	shortener := services.NewShortener(
 		codeGenerator,
-		fullURLsStorage,
+		URLsStorage,
 		config.PublicBaseURL,
 	)
 
 	router.Use(middlewares.NewLogMiddleware(logger))
 	router.Use(middlewares.CompressMiddleware)
 
-	router.Get("/{code}", handlers.GetURLByCode(fullURLsStorage))
+	router.Get("/{code}", handlers.GetURLByCode(URLsStorage))
 	router.Post("/", handlers.CreateShortURLPlain(shortener))
 	router.Get("/", handlers.FallbackHandler())
 

@@ -16,10 +16,10 @@ func main() {
 	}
 	defer logger.Sync()
 
-	fileStore, err := store.NewFileStore(config.FileStoragePath)
+	fileStorage, err := store.NewFileStorage(config.FileStoragePath)
 	if err != nil {
 		panic("failed to init app store")
 	}
 
-	app.Run(config, logger, fileStore)
+	app.Run(config, logger, fileStorage)
 }

@@ -53,13 +53,15 @@ go build -o shortener *.go \
 go build -o shortener *.go \
     && shortenertest -test.v -test.run=^TestIteration1$ -binary-path=./shortener
 
-# mine
-go test -v ./internal/app
+# Мои тесты
+go test ./...
 ```
 
 Работа с URLом:
 ```bash
 curl -X POST -d 'https://practicum.yandex.ru/' -i localhost:8080
+
+curl -X POST -H "Content-Type: application/json" -d '{"url": "https://practicum.yandex.ru/"}' --compressed -i localhost:8080/api/shorten
 
 curl -i localhost:8080/EwHXdJfB
 ```

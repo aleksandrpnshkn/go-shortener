@@ -11,6 +11,7 @@ type Config struct {
 	PublicBaseURL   string
 	LogLevel        string
 	FileStoragePath string
+	DatabaseDSN     string
 }
 
 func New() *Config {
@@ -26,11 +27,13 @@ func New() *Config {
 		PublicBaseURL:   "http://localhost:8080",
 		LogLevel:        "info",
 		FileStoragePath: fileStoragePath,
+		DatabaseDSN:     "host=127.0.0.1 port=5432 user=admin password=qwerty dbname=shortener sslmode=disable",
 	}
 
-	flag.StringVar(&config.ServerAddr, "a", config.ServerAddr, "Net address host:port")
+	flag.StringVar(&config.ServerAddr, "a", config.ServerAddr, "net address host:port")
 	flag.StringVar(&config.PublicBaseURL, "b", config.PublicBaseURL, "public base url for short links")
 	flag.StringVar(&config.FileStoragePath, "f", config.FileStoragePath, "file storage path")
+	flag.StringVar(&config.DatabaseDSN, "d", config.DatabaseDSN, "database DSN")
 
 	flag.Parse()
 
@@ -43,6 +46,7 @@ func New() *Config {
 	if envPublicBaseURL != "" {
 		config.PublicBaseURL = envPublicBaseURL
 	}
+	config.PublicBaseURL = strings.TrimRight(config.PublicBaseURL, "/")
 
 	envLogLevel := os.Getenv("LOG_LEVEL")
 	if envLogLevel != "" {
@@ -54,7 +58,10 @@ func New() *Config {
 		config.FileStoragePath = envFileStoragePath
 	}
 
-	config.PublicBaseURL = strings.TrimRight(config.PublicBaseURL, "/")
+	envDatabaseDSN := os.Getenv("DATABASE_DSN")
+	if envDatabaseDSN != "" {
+		config.DatabaseDSN = envDatabaseDSN
+	}
 
 	return &config
 }

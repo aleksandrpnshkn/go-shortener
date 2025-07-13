@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -13,6 +14,7 @@ import (
 
 func main() {
 	config := config.New()
+	ctx := context.Background()
 
 	logger, err := logs.NewLogger(config.LogLevel)
 	if err != nil {
@@ -26,7 +28,7 @@ func main() {
 		logger.Fatal("failed to init app store", zap.Error(err))
 	}
 
-	err = app.Run(config, logger, fileStorage)
+	err = app.Run(ctx, config, logger, fileStorage)
 	if err != nil {
 		logger.Fatal("failed to run app", zap.Error(err))
 	}

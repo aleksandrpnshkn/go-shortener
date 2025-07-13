@@ -65,3 +65,14 @@ curl -X POST -H "Content-Type: application/json" -d '{"url": "https://practicum.
 
 curl -i localhost:8080/EwHXdJfB
 ```
+
+Окружение:
+```bash
+# устрановить psql
+apt install postgresql-client
+
+docker compose up --detach
+
+# с хоста
+psql --host 127.0.0.1 --port 5432 --username admin --password --dbname shortener
+```

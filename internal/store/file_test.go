@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -20,7 +21,7 @@ func TestFileStorage(t *testing.T) {
 
 		assert.Equal(t, 2, fileStorage.lastID, "last id loaded")
 
-		originalURL, isFound := fileStorage.Get("test2")
+		originalURL, isFound := fileStorage.Get(context.Background(), "test2")
 
 		assert.True(t, isFound, "entry found")
 		assert.Equal(t, "http://example2.com", originalURL, "original url loaded")

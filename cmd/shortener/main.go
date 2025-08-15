@@ -28,17 +28,30 @@ func main() {
 	}
 	defer logger.Sync()
 
-	err = runMigrations(config.DatabaseDSN)
-	if err != nil {
-		logger.Warn("failed to run migrations: %v", zap.Error(err))
+	var storage store.Storage
+
+	SQLStorage, err := store.NewSQLStorage(ctx, config.DatabaseDSN)
+	if err == nil {
+		defer SQLStorage.Close()
+
+		err = runMigrations(config.DatabaseDSN)
+		if err != nil {
+			logger.Fatal("failed to run migrations: %v", zap.Error(err))
+		}
+
+		storage = SQLStorage
+	} else {
+		logger.Warn("failed to init SQL storage", zap.Error(err))
+
+		fileStorage, err := store.NewFileStorage(config.FileStoragePath)
+		if err != nil {
+			logger.Fatal("failed to init app storage", zap.Error(err))
+		}
+
+		storage = fileStorage
 	}
 
-	fileStorage, err := store.NewFileStorage(config.FileStoragePath)
-	if err != nil {
-		logger.Fatal("failed to init app store", zap.Error(err))
-	}
-
-	err = app.Run(ctx, config, logger, fileStorage)
+	err = app.Run(ctx, config, logger, storage)
 	if err != nil {
 		logger.Fatal("failed to run app", zap.Error(err))
 	}

@@ -1,7 +1,9 @@
 package store
 
-type Storage interface {
-	Set(shortURL string, originalURL string) error
+import "context"
 
-	Get(shortURL string) (originalURL string, isFound bool)
+type Storage interface {
+	Set(ctx context.Context, shortURL string, originalURL string) error
+
+	Get(ctx context.Context, shortURL string) (originalURL string, isFound bool)
 }

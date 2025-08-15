@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -43,7 +44,7 @@ func TestCreateShortURLPlain(t *testing.T) {
 		rawShortURL := string(resBody)
 		assert.Equal(t, "http://localhost/tEsT", rawShortURL, "returned short url")
 
-		storedURL, _ := URLsStorage.Get(services.Code(code))
+		storedURL, _ := URLsStorage.Get(context.Background(), services.Code(code))
 		assert.Equal(t, fullURL, string(storedURL), "new code stored")
 	})
 }

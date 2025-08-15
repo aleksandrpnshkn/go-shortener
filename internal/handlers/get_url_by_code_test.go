@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,7 +16,7 @@ func TestGetURLByCode(t *testing.T) {
 	fullURL := "http://example.com"
 
 	URLsStorage := services.NewURLsTestStorage()
-	URLsStorage.Set(services.Code(existedCode), services.OriginalURL(fullURL))
+	URLsStorage.Set(context.Background(), services.Code(existedCode), services.OriginalURL(fullURL))
 
 	t.Run("existed short url", func(t *testing.T) {
 		w := httptest.NewRecorder()

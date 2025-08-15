@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"go.uber.org/zap"
 )
 
 func CreateShortURLPlain(
@@ -21,7 +22,11 @@ func CreateShortURLPlain(
 		}
 		defer req.Body.Close()
 
-		shortURL := shortener.Shorten(req.Context(), services.OriginalURL(URL))
+		shortURL, err := shortener.Shorten(req.Context(), services.OriginalURL(URL))
+		if err != nil {
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		res.WriteHeader(http.StatusCreated)
 		res.Write([]byte(shortURL))
@@ -36,23 +41,16 @@ type createShortURLResponse struct {
 	Result string `json:"result"`
 }
 
-type apiError struct {
-	Message string `json:"message"`
-}
-
-type errorResponse struct {
-	Error apiError `json:"error"`
-}
-
 func CreateShortURL(
 	shortener *services.Shortener,
+	logger *zap.Logger,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "application/json")
 
 		rawRequestData, err := io.ReadAll(req.Body)
 		if err != nil {
-			writeError(res)
+			writeBadRequestError(res)
 			return
 		}
 		defer req.Body.Close()
@@ -60,42 +58,32 @@ func CreateShortURL(
 		var requestData createShortURLRequest
 		err = json.Unmarshal(rawRequestData, &requestData)
 		if err != nil {
-			writeError(res)
+			writeBadRequestError(res)
 			return
 		}
 
 		if len(requestData.URL) == 0 {
-			writeError(res)
+			writeBadRequestError(res)
 			return
 		}
 
-		shortURL := shortener.Shorten(req.Context(), services.OriginalURL(requestData.URL))
+		shortURL, err := shortener.Shorten(req.Context(), services.OriginalURL(requestData.URL))
+		if err != nil {
+			logger.Error("failed to create short url", zap.Error(err))
+			writeInternalServerError(res)
+			return
+		}
 
 		responseData := createShortURLResponse{
-			Result: shortURL,
+			Result: string(shortURL),
 		}
 		rawResponseData, err := json.Marshal(responseData)
 		if err != nil {
-			writeError(res)
+			writeBadRequestError(res)
 			return
 		}
 
 		res.WriteHeader(http.StatusCreated)
-		res.Write(rawResponseData)
-	}
-}
-
-func writeError(res http.ResponseWriter) {
-	res.WriteHeader(http.StatusBadRequest)
-
-	responseData := errorResponse{
-		Error: apiError{
-			Message: "bad request",
-		},
-	}
-
-	rawResponseData, err := json.Marshal(responseData)
-	if err == nil {
 		res.Write(rawResponseData)
 	}
 }

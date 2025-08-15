@@ -8,17 +8,18 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aleksandrpnshkn/go-shortener/internal/logs"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCreateShortURLPlain(t *testing.T) {
 	fullURL := "http://example.com"
-	code := "tEsT"
 
-	codeGenerator := services.NewTestGenerator(code)
-	URLsStorage := services.NewURLsTestStorage()
+	codeGenerator := services.NewTestGenerator("tEsT")
+	URLsStorage := store.NewMemoryStorage()
 	shortener := services.NewShortener(
 		codeGenerator,
 		URLsStorage,
@@ -42,15 +43,15 @@ func TestCreateShortURLPlain(t *testing.T) {
 		require.NoError(t, err)
 
 		rawShortURL := string(resBody)
-		assert.Equal(t, "http://localhost/tEsT", rawShortURL, "returned short url")
+		assert.Equal(t, "http://localhost/tEsT1", rawShortURL, "returned short url")
 
-		storedURL, _ := URLsStorage.Get(context.Background(), services.Code(code))
+		storedURL, _ := URLsStorage.Get(context.Background(), "tEsT1")
 		assert.Equal(t, fullURL, string(storedURL), "new code stored")
 	})
 }
 
 func TestCreateShort(t *testing.T) {
-	code := "tEsT"
+	codePrefix := "tEsT"
 
 	tests := []struct {
 		testName        string
@@ -62,7 +63,7 @@ func TestCreateShort(t *testing.T) {
 			testName:        "create short url",
 			statusCode:      http.StatusCreated,
 			requestRawBody:  `{"url":"http://example.com"}`,
-			responseRawBody: `{"result":"http://localhost/tEsT"}`,
+			responseRawBody: `{"result":"http://localhost/tEsT1"}`,
 		},
 		{
 			testName:        "invalid json",
@@ -79,8 +80,8 @@ func TestCreateShort(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		codeGenerator := services.NewTestGenerator(code)
-		URLsStorage := services.NewURLsTestStorage()
+		codeGenerator := services.NewTestGenerator(codePrefix)
+		URLsStorage := store.NewMemoryStorage()
 		shortener := services.NewShortener(
 			codeGenerator,
 			URLsStorage,
@@ -92,7 +93,7 @@ func TestCreateShort(t *testing.T) {
 			reqBody := strings.NewReader(test.requestRawBody)
 			req := httptest.NewRequest(http.MethodPost, "/api/shorten", reqBody)
 
-			CreateShortURL(shortener)(w, req)
+			CreateShortURL(shortener, logs.NewTestLogger())(w, req)
 
 			res := w.Result()
 			assert.Equal(t, test.statusCode, res.StatusCode)

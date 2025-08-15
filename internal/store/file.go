@@ -24,29 +24,42 @@ type ShortenedURLEntry struct {
 	OriginalURL string `json:"original_url"`
 }
 
-func (f *FileStorage) Set(ctx context.Context, shortURL string, originalURL string) error {
-	entry := ShortenedURLEntry{
-		UUID:        f.incrementID(),
-		ShortURL:    shortURL,
-		OriginalURL: originalURL,
+func (f *FileStorage) Set(ctx context.Context, url ShortenedURL) error {
+	return f.SetMany(ctx, []ShortenedURL{url})
+}
+
+func (f *FileStorage) SetMany(ctx context.Context, urls []ShortenedURL) error {
+	lines := make([][]byte, len(urls))
+
+	for idx, url := range urls {
+		entry := ShortenedURLEntry{
+			UUID:        f.incrementID(),
+			ShortURL:    url.Code,
+			OriginalURL: url.OriginalURL,
+		}
+
+		line, err := json.Marshal(entry)
+		if err != nil {
+			return err
+		}
+
+		lines[idx] = line
 	}
 
-	line, err := json.Marshal(entry)
+	err := f.writeLines(lines)
 	if err != nil {
 		return err
 	}
 
-	err = f.writeLine(line)
-	if err != nil {
-		return err
+	for _, url := range urls {
+		f.cache[url.Code] = url.OriginalURL
 	}
 
-	f.cache[shortURL] = originalURL
 	return nil
 }
 
-func (f *FileStorage) Get(ctx context.Context, shortURL string) (originalURL string, isFound bool) {
-	value, ok := f.cache[shortURL]
+func (f *FileStorage) Get(ctx context.Context, code string) (originalURL string, isFound bool) {
+	value, ok := f.cache[code]
 	return value, ok
 }
 
@@ -59,15 +72,17 @@ func (f *FileStorage) incrementID() int {
 	return f.lastID
 }
 
-func (f *FileStorage) writeLine(line []byte) error {
-	_, err := f.writer.Write(line)
-	if err != nil {
-		return err
-	}
+func (f *FileStorage) writeLines(lines [][]byte) error {
+	for _, line := range lines {
+		_, err := f.writer.Write(line)
+		if err != nil {
+			return err
+		}
 
-	_, err = f.writer.WriteRune(f.lineSeparator)
-	if err != nil {
-		return err
+		_, err = f.writer.WriteRune(f.lineSeparator)
+		if err != nil {
+			return err
+		}
 	}
 
 	return f.writer.Flush()

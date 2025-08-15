@@ -2,8 +2,15 @@ package store
 
 import "context"
 
-type Storage interface {
-	Set(ctx context.Context, shortURL string, originalURL string) error
+type ShortenedURL struct {
+	Code        string
+	OriginalURL string
+}
 
-	Get(ctx context.Context, shortURL string) (originalURL string, isFound bool)
+type Storage interface {
+	Set(ctx context.Context, url ShortenedURL) error
+
+	SetMany(ctx context.Context, urls []ShortenedURL) error
+
+	Get(ctx context.Context, code string) (originalURL string, isFound bool)
 }

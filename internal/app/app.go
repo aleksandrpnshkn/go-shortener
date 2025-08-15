@@ -20,10 +20,9 @@ func Run(ctx context.Context, config *config.Config, logger *zap.Logger, storage
 	router := chi.NewRouter()
 
 	codeGenerator := services.NewRandomCodeGenerator(codesLength)
-	URLsStorage := services.NewURLsStorage(storage)
 	shortener := services.NewShortener(
 		codeGenerator,
-		URLsStorage,
+		storage,
 		config.PublicBaseURL,
 	)
 
@@ -31,11 +30,12 @@ func Run(ctx context.Context, config *config.Config, logger *zap.Logger, storage
 	router.Use(compress.DecompressMiddleware)
 	router.Use(compress.CompressMiddleware)
 
-	router.Get("/{code}", handlers.GetURLByCode(URLsStorage))
+	router.Get("/{code}", handlers.GetURLByCode(storage))
 	router.Post("/", handlers.CreateShortURLPlain(shortener))
 	router.Get("/", handlers.FallbackHandler())
 
-	router.Post("/api/shorten", handlers.CreateShortURL(shortener))
+	router.Post("/api/shorten", handlers.CreateShortURL(shortener, logger))
+	router.Post("/api/shorten/batch", handlers.CreateShortURLBatch(shortener, logger))
 
 	router.Get("/ping", handlers.PingHandler(ctx, config.DatabaseDSN))
 

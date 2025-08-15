@@ -1,6 +1,9 @@
 package services
 
-import "math/rand"
+import (
+	"math/rand"
+	"strconv"
+)
 
 var codeRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
 
@@ -35,16 +38,19 @@ func NewRandomCodeGenerator(codeLength int) CodeGenerator {
 }
 
 type TestCodeGenerator struct {
-	testCode string
+	testCodePrefix string
+	counter        int
 }
 
 func (c *TestCodeGenerator) Generate() Code {
-	return Code(c.testCode)
+	c.counter++
+	return Code(c.testCodePrefix + strconv.Itoa(c.counter))
 }
 
-func NewTestGenerator(testCode string) CodeGenerator {
+func NewTestGenerator(testCodePrefix string) CodeGenerator {
 	generator := TestCodeGenerator{
-		testCode: testCode,
+		testCodePrefix: testCodePrefix,
+		counter:        0,
 	}
 	return &generator
 }

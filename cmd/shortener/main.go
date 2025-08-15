@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"embed"
+	"errors"
 	"log"
 	"os"
 
@@ -11,7 +13,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/store"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +28,7 @@ func main() {
 	}
 	defer logger.Sync()
 
-	err = migrateDatabase(config.DatabaseDSN)
+	err = runMigrations(config.DatabaseDSN)
 	if err != nil {
 		logger.Warn("failed to run migrations: %v", zap.Error(err))
 	}
@@ -42,10 +44,24 @@ func main() {
 	}
 }
 
-func migrateDatabase(databaseDSN string) error {
-	m, err := migrate.New("file://migrations", databaseDSN)
+//go:embed migrations/*.sql
+var migrationsFiles embed.FS
+
+func runMigrations(databaseDSN string) error {
+	sourceDriver, err := iofs.New(migrationsFiles, "migrations")
 	if err != nil {
 		return err
 	}
-	return m.Up()
+
+	m, err := migrate.NewWithSourceInstance("iofs", sourceDriver, databaseDSN)
+	if err != nil {
+		return err
+	}
+
+	err = m.Up()
+	if !errors.Is(err, migrate.ErrNoChange) {
+		return err
+	}
+
+	return nil
 }

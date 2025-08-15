@@ -63,5 +63,29 @@ curl -X POST -d 'https://practicum.yandex.ru/' -i localhost:8080
 
 curl -X POST -H "Content-Type: application/json" -d '{"url": "https://practicum.yandex.ru/"}' --compressed -i localhost:8080/api/shorten
 
+curl -X POST -H "Content-Type: application/json" -d '[{"correlation_id": "c1", "original_url": "https://practicum.yandex.ru/"}]' --compressed -i localhost:8080/api/shorten/batch
+
 curl -i localhost:8080/EwHXdJfB
+```
+
+Окружение:
+```bash
+# установить клиент для работы с БД (psql)
+apt install postgresql-client
+
+docker compose up --detach
+
+# с хоста
+psql --host 127.0.0.1 --port 5432 --username admin --password --dbname shortener
+```
+
+Для работы с миграциями установить migrate - https://github.com/golang-migrate/migrate/tree/v4.18.3/cmd/migrate . Затем в корне проекта:
+```bash
+~/golang-migrate/migrate create -ext sql -dir ./migrations -seq create_urls_table
+
+~/golang-migrate/migrate -database "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable" -path ./migrations up
+~/golang-migrate/migrate -database "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable" -path ./migrations down
+
+# Для очистки базы
+docker compose down --volumes
 ```

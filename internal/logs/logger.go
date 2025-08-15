@@ -19,3 +19,7 @@ func NewLogger(level string) (*zap.Logger, error) {
 
 	return logger, nil
 }
+
+func NewTestLogger() *zap.Logger {
+	return zap.NewExample()
+}

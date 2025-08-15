@@ -1,7 +1,16 @@
 package store
 
-type Storage interface {
-	Set(shortURL string, originalURL string) error
+import "context"
 
-	Get(shortURL string) (originalURL string, isFound bool)
+type ShortenedURL struct {
+	Code        string
+	OriginalURL string
+}
+
+type Storage interface {
+	Set(ctx context.Context, url ShortenedURL) error
+
+	SetMany(ctx context.Context, urls []ShortenedURL) error
+
+	Get(ctx context.Context, code string) (originalURL string, isFound bool)
 }

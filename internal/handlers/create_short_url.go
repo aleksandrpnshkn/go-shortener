@@ -21,7 +21,7 @@ func CreateShortURLPlain(
 		}
 		defer req.Body.Close()
 
-		shortURL := shortener.Shorten(services.OriginalURL(URL))
+		shortURL := shortener.Shorten(req.Context(), services.OriginalURL(URL))
 
 		res.WriteHeader(http.StatusCreated)
 		res.Write([]byte(shortURL))
@@ -69,7 +69,7 @@ func CreateShortURL(
 			return
 		}
 
-		shortURL := shortener.Shorten(services.OriginalURL(requestData.URL))
+		shortURL := shortener.Shorten(req.Context(), services.OriginalURL(requestData.URL))
 
 		responseData := createShortURLResponse{
 			Result: shortURL,

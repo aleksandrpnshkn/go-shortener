@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
@@ -15,11 +16,11 @@ import (
 
 const codesLength = 8
 
-func Run(config *config.Config, logger *zap.Logger, store store.Storage) error {
+func Run(ctx context.Context, config *config.Config, logger *zap.Logger, storage store.Storage) error {
 	router := chi.NewRouter()
 
 	codeGenerator := services.NewRandomCodeGenerator(codesLength)
-	URLsStorage := services.NewURLsStorage(store)
+	URLsStorage := services.NewURLsStorage(storage)
 	shortener := services.NewShortener(
 		codeGenerator,
 		URLsStorage,
@@ -35,6 +36,8 @@ func Run(config *config.Config, logger *zap.Logger, store store.Storage) error {
 	router.Get("/", handlers.FallbackHandler())
 
 	router.Post("/api/shorten", handlers.CreateShortURL(shortener))
+
+	router.Get("/ping", handlers.PingHandler(ctx, config.DatabaseDSN))
 
 	logger.Info("Running app...")
 

@@ -2,6 +2,7 @@ package store
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -23,7 +24,7 @@ type ShortenedURLEntry struct {
 	OriginalURL string `json:"original_url"`
 }
 
-func (f *FileStorage) Set(shortURL string, originalURL string) error {
+func (f *FileStorage) Set(ctx context.Context, shortURL string, originalURL string) error {
 	entry := ShortenedURLEntry{
 		UUID:        f.incrementID(),
 		ShortURL:    shortURL,
@@ -44,7 +45,7 @@ func (f *FileStorage) Set(shortURL string, originalURL string) error {
 	return nil
 }
 
-func (f *FileStorage) Get(shortURL string) (originalURL string, isFound bool) {
+func (f *FileStorage) Get(ctx context.Context, shortURL string) (originalURL string, isFound bool) {
 	value, ok := f.cache[shortURL]
 	return value, ok
 }

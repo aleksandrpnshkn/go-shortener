@@ -1,6 +1,10 @@
 package services
 
-import "github.com/aleksandrpnshkn/go-shortener/internal/store"
+import (
+	"context"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/store"
+)
 
 type OriginalURL string
 
@@ -8,12 +12,12 @@ type URLsStorage struct {
 	storage store.Storage
 }
 
-func (s *URLsStorage) Set(code Code, url OriginalURL) error {
-	return s.storage.Set(string(code), string(url))
+func (s *URLsStorage) Set(ctx context.Context, code Code, url OriginalURL) error {
+	return s.storage.Set(ctx, string(code), string(url))
 }
 
-func (s *URLsStorage) Get(code Code) (url OriginalURL, isFound bool) {
-	originalURL, isFound := s.storage.Get(string(code))
+func (s *URLsStorage) Get(ctx context.Context, code Code) (url OriginalURL, isFound bool) {
+	originalURL, isFound := s.storage.Get(ctx, string(code))
 	return OriginalURL(originalURL), isFound
 }
 

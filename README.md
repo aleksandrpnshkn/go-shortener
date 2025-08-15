@@ -68,11 +68,22 @@ curl -i localhost:8080/EwHXdJfB
 
 Окружение:
 ```bash
-# устрановить psql
+# установить клиент для работы с БД (psql)
 apt install postgresql-client
 
 docker compose up --detach
 
 # с хоста
 psql --host 127.0.0.1 --port 5432 --username admin --password --dbname shortener
+```
+
+Для работы с миграциями установить migrate - https://github.com/golang-migrate/migrate/tree/v4.18.3/cmd/migrate . Затем в корне проекта:
+```bash
+~/golang-migrate/migrate create -ext sql -dir ./migrations -seq create_urls_table
+
+~/golang-migrate/migrate -database "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable" -path ./migrations up
+~/golang-migrate/migrate -database "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable" -path ./migrations down
+
+# Для очистки базы
+docker compose down --volumes
 ```

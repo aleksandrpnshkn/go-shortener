@@ -27,7 +27,7 @@ func New() *Config {
 		PublicBaseURL:   "http://localhost:8080",
 		LogLevel:        "info",
 		FileStoragePath: fileStoragePath,
-		DatabaseDSN:     "host=127.0.0.1 port=5432 user=admin password=qwerty dbname=shortener sslmode=disable",
+		DatabaseDSN:     "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable",
 	}
 
 	flag.StringVar(&config.ServerAddr, "a", config.ServerAddr, "net address host:port")

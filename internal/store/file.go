@@ -24,14 +24,18 @@ type ShortenedURLEntry struct {
 	OriginalURL string `json:"original_url"`
 }
 
-func (f *FileStorage) Set(ctx context.Context, url ShortenedURL) error {
-	return f.SetMany(ctx, []ShortenedURL{url})
+func (f *FileStorage) Set(ctx context.Context, url ShortenedURL) (storedURL ShortenedURL, hasConflict bool, err error) {
+	_, hasConflict, err = f.SetMany(ctx, map[string]ShortenedURL{url.Code: url})
+	if err != nil {
+		return url, hasConflict, err
+	}
+	return url, hasConflict, nil
 }
 
-func (f *FileStorage) SetMany(ctx context.Context, urls []ShortenedURL) error {
-	lines := make([][]byte, len(urls))
+func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
+	lines := [][]byte{}
 
-	for idx, url := range urls {
+	for _, url := range urls {
 		entry := ShortenedURLEntry{
 			UUID:        f.incrementID(),
 			ShortURL:    url.Code,
@@ -40,22 +44,22 @@ func (f *FileStorage) SetMany(ctx context.Context, urls []ShortenedURL) error {
 
 		line, err := json.Marshal(entry)
 		if err != nil {
-			return err
+			return nil, false, err
 		}
 
-		lines[idx] = line
+		lines = append(lines, line)
 	}
 
-	err := f.writeLines(lines)
+	err = f.writeLines(lines)
 	if err != nil {
-		return err
+		return nil, false, err
 	}
 
 	for _, url := range urls {
 		f.cache[url.Code] = url.OriginalURL
 	}
 
-	return nil
+	return urls, false, nil
 }
 
 func (f *FileStorage) Get(ctx context.Context, code string) (originalURL string, isFound bool) {

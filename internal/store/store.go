@@ -8,9 +8,9 @@ type ShortenedURL struct {
 }
 
 type Storage interface {
-	Set(ctx context.Context, url ShortenedURL) error
+	Set(ctx context.Context, url ShortenedURL) (storedURL ShortenedURL, hasConflict bool, err error)
 
-	SetMany(ctx context.Context, urls []ShortenedURL) error
+	SetMany(ctx context.Context, urls map[string]ShortenedURL) (storedURLs map[string]ShortenedURL, hasConflict bool, err error)
 
 	Get(ctx context.Context, code string) (originalURL string, isFound bool)
 }

@@ -22,13 +22,18 @@ func CreateShortURLPlain(
 		}
 		defer req.Body.Close()
 
-		shortURL, err := shortener.Shorten(req.Context(), services.OriginalURL(URL))
+		shortURL, hasConflict, err := shortener.Shorten(req.Context(), services.OriginalURL(URL))
 		if err != nil {
 			res.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		res.WriteHeader(http.StatusCreated)
+		if hasConflict {
+			res.WriteHeader(http.StatusConflict)
+		} else {
+			res.WriteHeader(http.StatusCreated)
+		}
+
 		res.Write([]byte(shortURL))
 	}
 }
@@ -67,7 +72,7 @@ func CreateShortURL(
 			return
 		}
 
-		shortURL, err := shortener.Shorten(req.Context(), services.OriginalURL(requestData.URL))
+		shortURL, hasConflict, err := shortener.Shorten(req.Context(), services.OriginalURL(requestData.URL))
 		if err != nil {
 			logger.Error("failed to create short url", zap.Error(err))
 			writeInternalServerError(res)
@@ -83,7 +88,12 @@ func CreateShortURL(
 			return
 		}
 
-		res.WriteHeader(http.StatusCreated)
+		if hasConflict {
+			res.WriteHeader(http.StatusConflict)
+		} else {
+			res.WriteHeader(http.StatusCreated)
+		}
+
 		res.Write(rawResponseData)
 	}
 }

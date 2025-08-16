@@ -108,3 +108,37 @@ func TestCreateShort(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateShortDuplicate(t *testing.T) {
+	codePrefix := "tEsT"
+	originalURL := "http://example.com"
+
+	codeGenerator := services.NewTestGenerator(codePrefix)
+	URLsStorage := store.NewMemoryStorage()
+	URLsStorage.Set(context.Background(), store.ShortenedURL{
+		Code:        "test123",
+		OriginalURL: originalURL,
+	})
+	shortener := services.NewShortener(
+		codeGenerator,
+		URLsStorage,
+		"http://localhost",
+	)
+
+	t.Run("create duplicate url", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		reqBody := strings.NewReader(`{"url":"` + originalURL + `"}`)
+		req := httptest.NewRequest(http.MethodPost, "/api/shorten", reqBody)
+
+		CreateShortURL(shortener, logs.NewTestLogger())(w, req)
+
+		res := w.Result()
+		assert.Equal(t, http.StatusConflict, res.StatusCode)
+		assert.Equal(t, "application/json", res.Header.Get("Content-Type"))
+
+		_, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		err = res.Body.Close()
+		require.NoError(t, err)
+	})
+}

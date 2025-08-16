@@ -1,6 +1,8 @@
 package store
 
-import "context"
+import (
+	"context"
+)
 
 type MemoryStorage struct {
 	cache map[string]string
@@ -11,16 +13,34 @@ func (m *MemoryStorage) Get(ctx context.Context, code string) (value string, isF
 	return value, ok
 }
 
-func (m *MemoryStorage) Set(ctx context.Context, url ShortenedURL) error {
-	m.cache[url.Code] = url.OriginalURL
-	return nil
+func (m *MemoryStorage) Set(ctx context.Context, url ShortenedURL) (storedURL ShortenedURL, hasConflict bool, err error) {
+	const key = "k"
+	storedURLs, hasConflict, err := m.SetMany(ctx, map[string]ShortenedURL{key: url})
+	if err != nil {
+		return url, hasConflict, err
+	}
+
+	return storedURLs[key], hasConflict, err
 }
 
-func (m *MemoryStorage) SetMany(ctx context.Context, urls []ShortenedURL) error {
-	for _, url := range urls {
-		m.Set(ctx, url)
+func (m *MemoryStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
+	hasConflict = false
+	storedURLs = make(map[string]ShortenedURL, len(urls))
+
+	for key, url := range urls {
+		for storedCode, storedURL := range m.cache {
+			if storedURL == url.OriginalURL {
+				hasConflict = true
+
+				storedURLs[key] = ShortenedURL{
+					Code:        storedCode,
+					OriginalURL: storedURL,
+				}
+			}
+		}
+		m.cache[url.Code] = url.OriginalURL
 	}
-	return nil
+	return urls, hasConflict, nil
 }
 
 func NewMemoryStorage() *MemoryStorage {

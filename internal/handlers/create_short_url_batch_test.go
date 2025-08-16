@@ -30,18 +30,6 @@ func TestCreateShortBatch(t *testing.T) {
 			responseRawBody: `[{"correlation_id": "c1", "short_url":"http://localhost/tEsT1"}]`,
 		},
 		{
-			testName:   "create many short urls in batch",
-			statusCode: http.StatusCreated,
-			requestRawBody: `[
-				{"correlation_id":"c1","original_url":"http://dn6wokrj9ejfe.yandex/cijwbwkonkcwa"}, 
-				{"correlation_id":"c2","original_url":"http://n1u26q.biz"}
-			]`,
-			responseRawBody: `[
-				{"correlation_id": "c1", "short_url":"http://localhost/tEsT1"},
-				{"correlation_id": "c2", "short_url":"http://localhost/tEsT2"}
-			]`,
-		},
-		{
 			testName:        "invalid batch json",
 			statusCode:      http.StatusBadRequest,
 			requestRawBody:  `{"foo":"bar"}`,

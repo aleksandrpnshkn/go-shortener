@@ -64,6 +64,8 @@ func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL) 
 			tx.Rollback()
 			return nil, hasConflict, err
 		}
+
+		storedURLs[key] = url
 	}
 
 	return storedURLs, hasConflict, tx.Commit()

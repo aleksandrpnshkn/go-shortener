@@ -63,7 +63,7 @@ curl -X POST -d 'https://practicum.yandex.ru/' -i localhost:8080
 
 curl -X POST -H "Content-Type: application/json" -d '{"url": "https://practicum.yandex.ru/"}' --compressed -i localhost:8080/api/shorten
 
-curl -X POST -H "Content-Type: application/json" -d '[{"correlation_id": "c1", "original_url": "https://practicum.yandex.ru/"}]' --compressed -i localhost:8080/api/shorten/batch
+curl -X POST -H "Content-Type: application/json" -d '[{"correlation_id": "c1", "original_url": "https://practicum.yandex.ru/"}, {"correlation_id": "c2", "original_url": "https://practicum.yandex.ru/test"}]' --compressed -i localhost:8080/api/shorten/batch
 
 curl -i localhost:8080/EwHXdJfB
 ```

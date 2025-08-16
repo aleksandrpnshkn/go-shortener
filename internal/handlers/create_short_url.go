@@ -15,14 +15,14 @@ func CreateShortURLPlain(
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")
 
-		URL, err := io.ReadAll(req.Body)
+		url, err := io.ReadAll(req.Body)
 		if err != nil {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		defer req.Body.Close()
 
-		shortURL, hasConflict, err := shortener.Shorten(req.Context(), services.OriginalURL(URL))
+		shortURL, hasConflict, err := shortener.Shorten(req.Context(), services.OriginalURL(url))
 		if err != nil {
 			res.WriteHeader(http.StatusInternalServerError)
 			return

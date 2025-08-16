@@ -30,16 +30,16 @@ func main() {
 
 	var storage store.Storage
 
-	SQLStorage, err := store.NewSQLStorage(ctx, config.DatabaseDSN)
+	sqlStorage, err := store.NewSQLStorage(ctx, config.DatabaseDSN)
 	if err == nil {
-		defer SQLStorage.Close()
+		defer sqlStorage.Close()
 
 		err = runMigrations(config.DatabaseDSN)
 		if err != nil {
 			logger.Fatal("failed to run migrations: %v", zap.Error(err))
 		}
 
-		storage = SQLStorage
+		storage = sqlStorage
 	} else {
 		logger.Warn("failed to init SQL storage", zap.Error(err))
 

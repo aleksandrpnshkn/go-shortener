@@ -45,10 +45,10 @@ func TestCreateShortBatch(t *testing.T) {
 
 	for _, test := range tests {
 		codeGenerator := services.NewTestGenerator(codePrefix)
-		URLsStorage := store.NewMemoryStorage()
+		urlsStorage := store.NewMemoryStorage()
 		shortener := services.NewShortener(
 			codeGenerator,
-			URLsStorage,
+			urlsStorage,
 			"http://localhost",
 		)
 

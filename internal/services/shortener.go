@@ -29,7 +29,7 @@ func (s *Shortener) Shorten(ctx context.Context, URL OriginalURL) (shortURL Shor
 
 func (s *Shortener) ShortenMany(ctx context.Context, URLs map[string]OriginalURL) (shortURLs map[string]ShortURL, hasConflict bool, err error) {
 	codesInBatch := make(map[Code]bool, len(URLs))
-	URLsToStore := make(map[string]store.ShortenedURL, len(URLs))
+	urlsToStore := make(map[string]store.ShortenedURL, len(URLs))
 	shortURLs = make(map[string]ShortURL, len(URLs))
 
 	for correlationID, URL := range URLs {
@@ -45,13 +45,13 @@ func (s *Shortener) ShortenMany(ctx context.Context, URLs map[string]OriginalURL
 
 		codesInBatch[code] = true
 
-		URLsToStore[correlationID] = store.ShortenedURL{
+		urlsToStore[correlationID] = store.ShortenedURL{
 			Code:        string(code),
 			OriginalURL: string(URL),
 		}
 	}
 
-	storedURLs, hasConflict, err := s.urlsStorage.SetMany(ctx, URLsToStore)
+	storedURLs, hasConflict, err := s.urlsStorage.SetMany(ctx, urlsToStore)
 	if err != nil {
 		return nil, hasConflict, err
 	}

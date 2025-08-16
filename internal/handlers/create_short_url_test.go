@@ -19,10 +19,10 @@ func TestCreateShortURLPlain(t *testing.T) {
 	fullURL := "http://example.com"
 
 	codeGenerator := services.NewTestGenerator("tEsT")
-	URLsStorage := store.NewMemoryStorage()
+	urlsStorage := store.NewMemoryStorage()
 	shortener := services.NewShortener(
 		codeGenerator,
-		URLsStorage,
+		urlsStorage,
 		"http://localhost",
 	)
 
@@ -45,7 +45,7 @@ func TestCreateShortURLPlain(t *testing.T) {
 		rawShortURL := string(resBody)
 		assert.Equal(t, "http://localhost/tEsT1", rawShortURL, "returned short url")
 
-		storedURL, _ := URLsStorage.Get(context.Background(), "tEsT1")
+		storedURL, _ := urlsStorage.Get(context.Background(), "tEsT1")
 		assert.Equal(t, fullURL, string(storedURL), "new code stored")
 	})
 }
@@ -81,10 +81,10 @@ func TestCreateShort(t *testing.T) {
 
 	for _, test := range tests {
 		codeGenerator := services.NewTestGenerator(codePrefix)
-		URLsStorage := store.NewMemoryStorage()
+		urlsStorage := store.NewMemoryStorage()
 		shortener := services.NewShortener(
 			codeGenerator,
-			URLsStorage,
+			urlsStorage,
 			"http://localhost",
 		)
 
@@ -114,14 +114,14 @@ func TestCreateShortDuplicate(t *testing.T) {
 	originalURL := "http://example.com"
 
 	codeGenerator := services.NewTestGenerator(codePrefix)
-	URLsStorage := store.NewMemoryStorage()
-	URLsStorage.Set(context.Background(), store.ShortenedURL{
+	urlsStorage := store.NewMemoryStorage()
+	urlsStorage.Set(context.Background(), store.ShortenedURL{
 		Code:        "test123",
 		OriginalURL: originalURL,
 	})
 	shortener := services.NewShortener(
 		codeGenerator,
-		URLsStorage,
+		urlsStorage,
 		"http://localhost",
 	)
 

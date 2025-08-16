@@ -11,12 +11,12 @@ func PingHandler(ctx context.Context, databaseDSN string) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")
 
-		SQLStorage, err := store.NewSQLStorage(ctx, databaseDSN)
+		sqlStorage, err := store.NewSQLStorage(ctx, databaseDSN)
 		if err != nil {
 			res.WriteHeader(http.StatusInternalServerError)
 		}
 
-		err = SQLStorage.Ping(ctx)
+		err = sqlStorage.Ping(ctx)
 		if err != nil {
 			res.WriteHeader(http.StatusInternalServerError)
 		}

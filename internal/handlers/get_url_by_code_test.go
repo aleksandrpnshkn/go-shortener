@@ -15,8 +15,8 @@ func TestGetURLByCode(t *testing.T) {
 	existedCode := "tEsT"
 	fullURL := "http://example.com"
 
-	URLsStorage := store.NewMemoryStorage()
-	URLsStorage.Set(context.Background(), store.ShortenedURL{
+	urlsStorage := store.NewMemoryStorage()
+	urlsStorage.Set(context.Background(), store.ShortenedURL{
 		Code:        existedCode,
 		OriginalURL: fullURL,
 	})
@@ -26,7 +26,7 @@ func TestGetURLByCode(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/"+existedCode, nil)
 		req.SetPathValue("code", existedCode)
 
-		GetURLByCode(URLsStorage)(w, req)
+		GetURLByCode(urlsStorage)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()
@@ -44,7 +44,7 @@ func TestGetURLByCode(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/"+unknownCode, nil)
 		req.SetPathValue("code", unknownCode)
 
-		GetURLByCode(URLsStorage)(w, req)
+		GetURLByCode(urlsStorage)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()

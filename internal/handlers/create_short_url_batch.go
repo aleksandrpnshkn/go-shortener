@@ -45,13 +45,13 @@ func CreateShortURLBatch(
 			return
 		}
 
-		URLs := make(map[string]services.OriginalURL, len(requestData))
+		urls := make(map[string]services.OriginalURL, len(requestData))
 
 		for _, url := range requestData {
-			URLs[url.CorrelationID] = services.OriginalURL(url.OriginalURL)
+			urls[url.CorrelationID] = services.OriginalURL(url.OriginalURL)
 		}
 
-		shortURLs, _, err := shortener.ShortenMany(req.Context(), URLs)
+		shortURLs, _, err := shortener.ShortenMany(req.Context(), urls)
 		if err != nil {
 			logger.Error("failed to create short url", zap.Error(err))
 			writeInternalServerError(res)

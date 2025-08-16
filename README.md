@@ -53,8 +53,8 @@ go build -o shortener *.go \
 go build -o shortener *.go \
     && shortenertest -test.v -test.run=^TestIteration1$ -binary-path=./shortener
 
-# Мои тесты
-go test ./...
+# Мои тесты (count для отключения кэша, помогает отлавливать flaky-тесты)
+go test -count=1 ./...
 ```
 
 Работа с URLом:
@@ -63,5 +63,36 @@ curl -X POST -d 'https://practicum.yandex.ru/' -i localhost:8080
 
 curl -X POST -H "Content-Type: application/json" -d '{"url": "https://practicum.yandex.ru/"}' --compressed -i localhost:8080/api/shorten
 
+curl -X POST -H "Content-Type: application/json" -d '[{"correlation_id": "c1", "original_url": "https://practicum.yandex.ru/"}, {"correlation_id": "c2", "original_url": "https://practicum.yandex.ru/test"}]' --compressed -i localhost:8080/api/shorten/batch
+
 curl -i localhost:8080/EwHXdJfB
+```
+
+Окружение:
+```bash
+# установить клиент для работы с БД (psql)
+apt install postgresql-client
+
+docker compose up --detach
+
+# с хоста
+psql --host 127.0.0.1 --port 5432 --username admin --password --dbname shortener
+```
+
+Для работы с миграциями установить migrate - https://github.com/golang-migrate/migrate/tree/v4.18.3/cmd/migrate . Затем в корне проекта:
+```bash
+cd go-shortener/cmd/shortener
+
+~/golang-migrate/migrate create -ext sql -dir ./migrations -seq create_example_table
+
+~/golang-migrate/migrate -database "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable" -path ./migrations up
+~/golang-migrate/migrate -database "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable" -path ./migrations down
+
+# Для очистки базы
+docker compose down --volumes
+```
+
+Пример команды для mockgen:
+```
+mockgen -destination=mocks/mock_storage.go -package=mocks ./internal/store Storage
 ```

@@ -2,6 +2,7 @@ package store
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -23,34 +24,58 @@ type ShortenedURLEntry struct {
 	OriginalURL string `json:"original_url"`
 }
 
-func (f *FileStorage) Set(shortURL string, originalURL string) error {
-	entry := ShortenedURLEntry{
-		UUID:        f.incrementID(),
-		ShortURL:    shortURL,
-		OriginalURL: originalURL,
-	}
-
-	line, err := json.Marshal(entry)
-	if err != nil {
-		return err
-	}
-
-	err = f.writeLine(line)
-	if err != nil {
-		return err
-	}
-
-	f.cache[shortURL] = originalURL
+func (f *FileStorage) Ping(ctx context.Context) error {
 	return nil
 }
 
-func (f *FileStorage) Get(shortURL string) (originalURL string, isFound bool) {
-	value, ok := f.cache[shortURL]
-	return value, ok
+func (f *FileStorage) Set(ctx context.Context, url ShortenedURL) (storedURL ShortenedURL, hasConflict bool, err error) {
+	_, hasConflict, err = f.SetMany(ctx, map[string]ShortenedURL{url.Code: url})
+	if err != nil {
+		return url, hasConflict, err
+	}
+	return url, hasConflict, nil
 }
 
-func (f *FileStorage) Close() {
-	f.file.Close()
+func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
+	lines := [][]byte{}
+
+	for _, url := range urls {
+		entry := ShortenedURLEntry{
+			UUID:        f.incrementID(),
+			ShortURL:    url.Code,
+			OriginalURL: url.OriginalURL,
+		}
+
+		line, err := json.Marshal(entry)
+		if err != nil {
+			return nil, false, err
+		}
+
+		lines = append(lines, line)
+	}
+
+	err = f.writeLines(lines)
+	if err != nil {
+		return nil, false, err
+	}
+
+	for _, url := range urls {
+		f.cache[url.Code] = url.OriginalURL
+	}
+
+	return urls, false, nil
+}
+
+func (f *FileStorage) Get(ctx context.Context, code string) (originalURL string, err error) {
+	value, ok := f.cache[code]
+	if !ok {
+		return "", ErrCodeNotFound
+	}
+	return value, nil
+}
+
+func (f *FileStorage) Close() error {
+	return f.file.Close()
 }
 
 func (f *FileStorage) incrementID() int {
@@ -58,15 +83,17 @@ func (f *FileStorage) incrementID() int {
 	return f.lastID
 }
 
-func (f *FileStorage) writeLine(line []byte) error {
-	_, err := f.writer.Write(line)
-	if err != nil {
-		return err
-	}
+func (f *FileStorage) writeLines(lines [][]byte) error {
+	for _, line := range lines {
+		_, err := f.writer.Write(line)
+		if err != nil {
+			return err
+		}
 
-	_, err = f.writer.WriteRune(f.lineSeparator)
-	if err != nil {
-		return err
+		_, err = f.writer.WriteRune(f.lineSeparator)
+		if err != nil {
+			return err
+		}
 	}
 
 	return f.writer.Flush()

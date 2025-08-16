@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/logs"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestCreateShortBatch(t *testing.T) {
@@ -57,7 +57,7 @@ func TestCreateShortBatch(t *testing.T) {
 			reqBody := strings.NewReader(test.requestRawBody)
 			req := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", reqBody)
 
-			CreateShortURLBatch(shortener, logs.NewTestLogger())(w, req)
+			CreateShortURLBatch(shortener, zap.NewExample())(w, req)
 
 			res := w.Result()
 			assert.Equal(t, test.statusCode, res.StatusCode)

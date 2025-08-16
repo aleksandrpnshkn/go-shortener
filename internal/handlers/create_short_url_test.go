@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/logs"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestCreateShortURLPlain(t *testing.T) {
@@ -31,7 +31,7 @@ func TestCreateShortURLPlain(t *testing.T) {
 		reqBody := strings.NewReader(fullURL)
 		req := httptest.NewRequest(http.MethodPost, "/", reqBody)
 
-		CreateShortURLPlain(shortener, logs.NewTestLogger())(w, req)
+		CreateShortURLPlain(shortener, zap.NewExample())(w, req)
 
 		res := w.Result()
 		assert.Equal(t, http.StatusCreated, res.StatusCode)
@@ -93,7 +93,7 @@ func TestCreateShort(t *testing.T) {
 			reqBody := strings.NewReader(test.requestRawBody)
 			req := httptest.NewRequest(http.MethodPost, "/api/shorten", reqBody)
 
-			CreateShortURL(shortener, logs.NewTestLogger())(w, req)
+			CreateShortURL(shortener, zap.NewExample())(w, req)
 
 			res := w.Result()
 			assert.Equal(t, test.statusCode, res.StatusCode)
@@ -130,7 +130,7 @@ func TestCreateShortDuplicate(t *testing.T) {
 		reqBody := strings.NewReader(`{"url":"` + originalURL + `"}`)
 		req := httptest.NewRequest(http.MethodPost, "/api/shorten", reqBody)
 
-		CreateShortURL(shortener, logs.NewTestLogger())(w, req)
+		CreateShortURL(shortener, zap.NewExample())(w, req)
 
 		res := w.Result()
 		assert.Equal(t, http.StatusConflict, res.StatusCode)

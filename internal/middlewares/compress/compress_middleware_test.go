@@ -8,15 +8,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/logs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestCompressMiddleware(t *testing.T) {
 	testText := `{"hello": "world"}`
 	testStatus := http.StatusOK
-	handler := NewCompressMiddleware(logs.NewTestLogger())(testEchoHandler(testStatus))
+	handler := NewCompressMiddleware(zap.NewExample())(testEchoHandler(testStatus))
 
 	srv := httptest.NewServer(handler)
 	defer srv.Close()

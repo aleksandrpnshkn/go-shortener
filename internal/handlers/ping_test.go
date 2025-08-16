@@ -7,11 +7,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/logs"
 	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+	"go.uber.org/zap"
 )
 
 func TestPingHandler(t *testing.T) {
@@ -25,7 +25,7 @@ func TestPingHandler(t *testing.T) {
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/ping", nil)
 
-		PingHandler(context.Background(), storage, logs.NewTestLogger())(w, req)
+		PingHandler(context.Background(), storage, zap.NewExample())(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()
@@ -42,7 +42,7 @@ func TestPingHandler(t *testing.T) {
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/ping", nil)
 
-		PingHandler(context.Background(), storage, logs.NewTestLogger())(w, req)
+		PingHandler(context.Background(), storage, zap.NewExample())(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()

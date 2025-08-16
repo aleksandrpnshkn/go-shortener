@@ -37,7 +37,7 @@ func Run(ctx context.Context, config *config.Config, logger *zap.Logger, storage
 	router.Post("/api/shorten", handlers.CreateShortURL(shortener, logger))
 	router.Post("/api/shorten/batch", handlers.CreateShortURLBatch(shortener, logger))
 
-	router.Get("/ping", handlers.PingHandler(ctx, config.DatabaseDSN, logger))
+	router.Get("/ping", handlers.PingHandler(ctx, storage, logger))
 
 	logger.Info("Running app...")
 

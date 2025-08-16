@@ -8,6 +8,10 @@ type MemoryStorage struct {
 	cache map[string]string
 }
 
+func (m *MemoryStorage) Ping(ctx context.Context) error {
+	return nil
+}
+
 func (m *MemoryStorage) Get(ctx context.Context, code string) (value string, isFound bool) {
 	value, ok := m.cache[code]
 	return value, ok

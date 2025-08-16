@@ -91,3 +91,8 @@ cd go-shortener/cmd/shortener
 # Для очистки базы
 docker compose down --volumes
 ```
+
+Пример команды для mockgen:
+```
+mockgen -destination=mocks/mock_storage.go -package=mocks ./internal/store Storage
+```

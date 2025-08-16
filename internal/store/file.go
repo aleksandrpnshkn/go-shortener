@@ -24,6 +24,10 @@ type ShortenedURLEntry struct {
 	OriginalURL string `json:"original_url"`
 }
 
+func (f *FileStorage) Ping(ctx context.Context) error {
+	return nil
+}
+
 func (f *FileStorage) Set(ctx context.Context, url ShortenedURL) (storedURL ShortenedURL, hasConflict bool, err error) {
 	_, hasConflict, err = f.SetMany(ctx, map[string]ShortenedURL{url.Code: url})
 	if err != nil {

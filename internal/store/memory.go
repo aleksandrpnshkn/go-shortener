@@ -47,6 +47,10 @@ func (m *MemoryStorage) SetMany(ctx context.Context, urls map[string]ShortenedUR
 	return urls, hasConflict, nil
 }
 
+func (m *MemoryStorage) Close() error {
+	return nil
+}
+
 func NewMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
 		cache: map[string]string{},

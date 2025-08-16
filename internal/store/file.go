@@ -71,8 +71,8 @@ func (f *FileStorage) Get(ctx context.Context, code string) (originalURL string,
 	return value, ok
 }
 
-func (f *FileStorage) Close() {
-	f.file.Close()
+func (f *FileStorage) Close() error {
+	return f.file.Close()
 }
 
 func (f *FileStorage) incrementID() int {

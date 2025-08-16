@@ -16,10 +16,10 @@ type Shortener struct {
 	baseURL       string
 }
 
-func (s *Shortener) Shorten(ctx context.Context, URL OriginalURL) (shortURL ShortURL, hasConflict bool, err error) {
+func (s *Shortener) Shorten(ctx context.Context, url OriginalURL) (shortURL ShortURL, hasConflict bool, err error) {
 	const fakeCorrelationID = "fake_id"
 
-	shortURLs, hasConflict, err := s.ShortenMany(ctx, map[string]OriginalURL{fakeCorrelationID: URL})
+	shortURLs, hasConflict, err := s.ShortenMany(ctx, map[string]OriginalURL{fakeCorrelationID: url})
 	if err != nil {
 		return "", hasConflict, err
 	}
@@ -27,12 +27,12 @@ func (s *Shortener) Shorten(ctx context.Context, URL OriginalURL) (shortURL Shor
 	return shortURLs[fakeCorrelationID], hasConflict, nil
 }
 
-func (s *Shortener) ShortenMany(ctx context.Context, URLs map[string]OriginalURL) (shortURLs map[string]ShortURL, hasConflict bool, err error) {
-	codesInBatch := make(map[Code]bool, len(URLs))
-	urlsToStore := make(map[string]store.ShortenedURL, len(URLs))
-	shortURLs = make(map[string]ShortURL, len(URLs))
+func (s *Shortener) ShortenMany(ctx context.Context, urls map[string]OriginalURL) (shortURLs map[string]ShortURL, hasConflict bool, err error) {
+	codesInBatch := make(map[Code]bool, len(urls))
+	urlsToStore := make(map[string]store.ShortenedURL, len(urls))
+	shortURLs = make(map[string]ShortURL, len(urls))
 
-	for correlationID, URL := range URLs {
+	for correlationID, url := range urls {
 		var code Code
 		codeExistsInCurrentBatch := true
 		codeExistsInDatabase := true
@@ -47,7 +47,7 @@ func (s *Shortener) ShortenMany(ctx context.Context, URLs map[string]OriginalURL
 
 		urlsToStore[correlationID] = store.ShortenedURL{
 			Code:        string(code),
-			OriginalURL: string(URL),
+			OriginalURL: string(url),
 		}
 	}
 
@@ -56,8 +56,8 @@ func (s *Shortener) ShortenMany(ctx context.Context, URLs map[string]OriginalURL
 		return nil, hasConflict, err
 	}
 
-	for correlationID, URL := range storedURLs {
-		shortURLs[correlationID] = ShortURL(s.baseURL + "/" + URL.Code)
+	for correlationID, url := range storedURLs {
+		shortURLs[correlationID] = ShortURL(s.baseURL + "/" + url.Code)
 	}
 
 	return shortURLs, hasConflict, nil

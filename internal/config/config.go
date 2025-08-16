@@ -37,29 +37,29 @@ func New() *Config {
 
 	flag.Parse()
 
-	envServerAddr := os.Getenv("SERVER_ADDRESS")
-	if envServerAddr != "" {
+	envServerAddr, ok := os.LookupEnv("SERVER_ADDRESS")
+	if ok {
 		config.ServerAddr = envServerAddr
 	}
 
-	envPublicBaseURL := os.Getenv("BASE_URL")
-	if envPublicBaseURL != "" {
+	envPublicBaseURL, ok := os.LookupEnv("BASE_URL")
+	if ok {
 		config.PublicBaseURL = envPublicBaseURL
 	}
 	config.PublicBaseURL = strings.TrimRight(config.PublicBaseURL, "/")
 
-	envLogLevel := os.Getenv("LOG_LEVEL")
-	if envLogLevel != "" {
+	envLogLevel, ok := os.LookupEnv("LOG_LEVEL")
+	if ok {
 		config.LogLevel = envLogLevel
 	}
 
-	envFileStoragePath := os.Getenv("FILE_STORAGE_PATH")
-	if envFileStoragePath != "" {
+	envFileStoragePath, ok := os.LookupEnv("FILE_STORAGE_PATH")
+	if ok {
 		config.FileStoragePath = envFileStoragePath
 	}
 
-	envDatabaseDSN := os.Getenv("DATABASE_DSN")
-	if envDatabaseDSN != "" {
+	envDatabaseDSN, ok := os.LookupEnv("DATABASE_DSN")
+	if ok {
 		config.DatabaseDSN = envDatabaseDSN
 	}
 

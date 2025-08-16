@@ -27,17 +27,17 @@ func Run(ctx context.Context, config *config.Config, logger *zap.Logger, storage
 	)
 
 	router.Use(middlewares.NewLogMiddleware(logger))
-	router.Use(compress.DecompressMiddleware)
-	router.Use(compress.CompressMiddleware)
+	router.Use(compress.NewDecompressMiddleware(logger))
+	router.Use(compress.NewCompressMiddleware(logger))
 
 	router.Get("/{code}", handlers.GetURLByCode(storage))
-	router.Post("/", handlers.CreateShortURLPlain(shortener))
+	router.Post("/", handlers.CreateShortURLPlain(shortener, logger))
 	router.Get("/", handlers.FallbackHandler())
 
 	router.Post("/api/shorten", handlers.CreateShortURL(shortener, logger))
 	router.Post("/api/shorten/batch", handlers.CreateShortURLBatch(shortener, logger))
 
-	router.Get("/ping", handlers.PingHandler(ctx, config.DatabaseDSN))
+	router.Get("/ping", handlers.PingHandler(ctx, config.DatabaseDSN, logger))
 
 	logger.Info("Running app...")
 

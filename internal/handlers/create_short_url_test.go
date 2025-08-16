@@ -31,7 +31,7 @@ func TestCreateShortURLPlain(t *testing.T) {
 		reqBody := strings.NewReader(fullURL)
 		req := httptest.NewRequest(http.MethodPost, "/", reqBody)
 
-		CreateShortURLPlain(shortener)(w, req)
+		CreateShortURLPlain(shortener, logs.NewTestLogger())(w, req)
 
 		res := w.Result()
 		assert.Equal(t, http.StatusCreated, res.StatusCode)

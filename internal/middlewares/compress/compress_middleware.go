@@ -4,6 +4,8 @@ import (
 	"compress/gzip"
 	"net/http"
 	"strings"
+
+	"go.uber.org/zap"
 )
 
 type compressWriter struct {
@@ -41,28 +43,31 @@ func newCompressWriter(res http.ResponseWriter) (*compressWriter, error) {
 	return compressWriter, nil
 }
 
-func CompressMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		acceptEncoding := req.Header.Get("Accept-Encoding")
-		supportsGzip := strings.Contains(acceptEncoding, "gzip")
+func NewCompressMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			acceptEncoding := req.Header.Get("Accept-Encoding")
+			supportsGzip := strings.Contains(acceptEncoding, "gzip")
 
-		contentType := req.Header.Get("Content-Type")
-		isGzipableContentType := strings.Contains(contentType, "application/json") ||
-			strings.Contains(contentType, "text/html")
+			contentType := req.Header.Get("Content-Type")
+			isGzipableContentType := strings.Contains(contentType, "application/json") ||
+				strings.Contains(contentType, "text/html")
 
-		if supportsGzip && isGzipableContentType {
-			compressWriter, err := newCompressWriter(res)
-			if err != nil {
-				res.WriteHeader(http.StatusInternalServerError)
-				return
+			if supportsGzip && isGzipableContentType {
+				compressWriter, err := newCompressWriter(res)
+				if err != nil {
+					logger.Error("failed to compress response", zap.Error(err))
+					res.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+
+				defer compressWriter.Close()
+				res = compressWriter
+
+				res.Header().Set("Content-Encoding", "gzip")
 			}
 
-			defer compressWriter.Close()
-			res = compressWriter
-
-			res.Header().Set("Content-Encoding", "gzip")
-		}
-
-		next.ServeHTTP(res, req)
-	})
+			next.ServeHTTP(res, req)
+		})
+	}
 }

@@ -11,6 +11,7 @@ import (
 
 func CreateShortURLPlain(
 	shortener *services.Shortener,
+	logger *zap.Logger,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")
@@ -24,6 +25,7 @@ func CreateShortURLPlain(
 
 		shortURL, hasConflict, err := shortener.Shorten(req.Context(), services.OriginalURL(url))
 		if err != nil {
+			logger.Error("failed to create plain short url", zap.Error(err))
 			res.WriteHeader(http.StatusInternalServerError)
 			return
 		}

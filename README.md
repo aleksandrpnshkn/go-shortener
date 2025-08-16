@@ -53,8 +53,8 @@ go build -o shortener *.go \
 go build -o shortener *.go \
     && shortenertest -test.v -test.run=^TestIteration1$ -binary-path=./shortener
 
-# Мои тесты
-go test ./...
+# Мои тесты (count для отключения кэша, помогает отлавливать flaky-тесты)
+go test -count=1 ./...
 ```
 
 Работа с URLом:

@@ -66,9 +66,12 @@ func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL)
 	return urls, false, nil
 }
 
-func (f *FileStorage) Get(ctx context.Context, code string) (originalURL string, isFound bool) {
+func (f *FileStorage) Get(ctx context.Context, code string) (originalURL string, err error) {
 	value, ok := f.cache[code]
-	return value, ok
+	if !ok {
+		return "", ErrCodeNotFound
+	}
+	return value, nil
 }
 
 func (f *FileStorage) Close() error {

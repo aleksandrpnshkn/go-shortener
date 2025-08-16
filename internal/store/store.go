@@ -22,10 +22,15 @@ type Storage interface {
 
 	SetMany(ctx context.Context, urls map[string]ShortenedURL) (storedURLs map[string]ShortenedURL, hasConflict bool, err error)
 
-	Get(ctx context.Context, code string) (originalURL string, isFound bool)
+	Get(ctx context.Context, code string) (originalURL string, err error)
 
 	Close() error
 }
+
+var (
+	ErrCodeNotFound        = errors.New("code not found")
+	ErrOriginalURLNotFound = errors.New("original url not found")
+)
 
 func NewStorage(
 	ctx context.Context,

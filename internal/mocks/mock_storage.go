@@ -56,11 +56,11 @@ func (mr *MockStorageMockRecorder) Close() *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockStorage) Get(ctx context.Context, code string) (string, bool) {
+func (m *MockStorage) Get(ctx context.Context, code string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, code)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(bool)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 

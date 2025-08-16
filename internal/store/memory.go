@@ -12,9 +12,12 @@ func (m *MemoryStorage) Ping(ctx context.Context) error {
 	return nil
 }
 
-func (m *MemoryStorage) Get(ctx context.Context, code string) (value string, isFound bool) {
+func (m *MemoryStorage) Get(ctx context.Context, code string) (value string, err error) {
 	value, ok := m.cache[code]
-	return value, ok
+	if !ok {
+		return "", ErrCodeNotFound
+	}
+	return value, nil
 }
 
 func (m *MemoryStorage) Set(ctx context.Context, url ShortenedURL) (storedURL ShortenedURL, hasConflict bool, err error) {

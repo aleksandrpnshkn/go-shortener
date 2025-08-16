@@ -51,9 +51,9 @@ func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL) 
 		_, err := stmt.ExecContext(ctx, url.Code, url.OriginalURL)
 		var pgerr *pgconn.PgError
 		if errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
-			storedCode, isFound := s.getCode(ctx, url.OriginalURL)
+			storedCode, err := s.getCode(ctx, url.OriginalURL)
 
-			if isFound {
+			if err == nil {
 				hasConflict = true
 				url.Code = storedCode
 				storedURLs[key] = url
@@ -71,24 +71,30 @@ func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL) 
 	return storedURLs, hasConflict, tx.Commit()
 }
 
-func (s *SQLStorage) Get(ctx context.Context, code string) (originalURL string, isFound bool) {
+func (s *SQLStorage) Get(ctx context.Context, code string) (originalURL string, err error) {
 	row := s.db.QueryRowContext(ctx, "SELECT original_url FROM urls WHERE code = $1", code)
-	err := row.Scan(&originalURL)
+	err = row.Scan(&originalURL)
 	if err != nil {
-		return "", false
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", ErrCodeNotFound
+		}
+		return "", err
 	}
 
-	return originalURL, true
+	return originalURL, nil
 }
 
-func (s *SQLStorage) getCode(ctx context.Context, originalURL string) (code string, isFound bool) {
+func (s *SQLStorage) getCode(ctx context.Context, originalURL string) (code string, err error) {
 	row := s.db.QueryRowContext(ctx, "SELECT code FROM urls WHERE original_url = $1", originalURL)
-	err := row.Scan(&code)
+	err = row.Scan(&code)
 	if err != nil {
-		return "", false
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", ErrOriginalURLNotFound
+		}
+		return "", err
 	}
 
-	return code, true
+	return code, nil
 }
 
 func NewSQLStorage(ctx context.Context, databaseDSN string) (*SQLStorage, error) {

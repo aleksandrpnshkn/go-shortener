@@ -40,7 +40,9 @@ func (s *Shortener) ShortenMany(ctx context.Context, urls map[string]OriginalURL
 			code = s.codeGenerator.Generate()
 
 			_, codeExistsInCurrentBatch = codesInBatch[code]
-			_, codeExistsInDatabase = s.urlsStorage.Get(ctx, string(code))
+
+			_, err = s.urlsStorage.Get(ctx, string(code))
+			codeExistsInDatabase = err == nil
 		}
 
 		codesInBatch[code] = true

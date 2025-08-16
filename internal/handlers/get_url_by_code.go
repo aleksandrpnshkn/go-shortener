@@ -10,9 +10,8 @@ func GetURLByCode(urlsStorage store.Storage) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")
 
-		url, ok := urlsStorage.Get(req.Context(), req.PathValue("code"))
-
-		if !ok {
+		url, err := urlsStorage.Get(req.Context(), req.PathValue("code"))
+		if err != nil {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}

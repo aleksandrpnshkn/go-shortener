@@ -4,13 +4,13 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"go.uber.org/zap"
 )
 
 func PingHandler(
 	ctx context.Context,
-	storage store.Storage,
+	storage urls.Storage,
 	logger *zap.Logger,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {

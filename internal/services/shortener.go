@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 )
 
 type OriginalURL string
@@ -12,14 +12,14 @@ type ShortURL string
 
 type Shortener struct {
 	codeGenerator CodeGenerator
-	urlsStorage   store.Storage
+	urlsStorage   urls.Storage
 	baseURL       string
 }
 
-func (s *Shortener) Shorten(ctx context.Context, url OriginalURL) (shortURL ShortURL, hasConflict bool, err error) {
+func (s *Shortener) Shorten(ctx context.Context, originalURL OriginalURL) (shortURL ShortURL, hasConflict bool, err error) {
 	const fakeCorrelationID = "fake_id"
 
-	shortURLs, hasConflict, err := s.ShortenMany(ctx, map[string]OriginalURL{fakeCorrelationID: url})
+	shortURLs, hasConflict, err := s.ShortenMany(ctx, map[string]OriginalURL{fakeCorrelationID: originalURL})
 	if err != nil {
 		return "", hasConflict, err
 	}
@@ -27,12 +27,12 @@ func (s *Shortener) Shorten(ctx context.Context, url OriginalURL) (shortURL Shor
 	return shortURLs[fakeCorrelationID], hasConflict, nil
 }
 
-func (s *Shortener) ShortenMany(ctx context.Context, urls map[string]OriginalURL) (shortURLs map[string]ShortURL, hasConflict bool, err error) {
-	codesInBatch := make(map[Code]bool, len(urls))
-	urlsToStore := make(map[string]store.ShortenedURL, len(urls))
-	shortURLs = make(map[string]ShortURL, len(urls))
+func (s *Shortener) ShortenMany(ctx context.Context, originalURLs map[string]OriginalURL) (shortURLs map[string]ShortURL, hasConflict bool, err error) {
+	codesInBatch := make(map[Code]bool, len(originalURLs))
+	urlsToStore := make(map[string]urls.ShortenedURL, len(originalURLs))
+	shortURLs = make(map[string]ShortURL, len(originalURLs))
 
-	for correlationID, url := range urls {
+	for correlationID, url := range originalURLs {
 		var code Code
 		codeExistsInCurrentBatch := true
 		codeExistsInDatabase := true
@@ -47,7 +47,7 @@ func (s *Shortener) ShortenMany(ctx context.Context, urls map[string]OriginalURL
 
 		codesInBatch[code] = true
 
-		urlsToStore[correlationID] = store.ShortenedURL{
+		urlsToStore[correlationID] = urls.ShortenedURL{
 			Code:        string(code),
 			OriginalURL: string(url),
 		}
@@ -67,7 +67,7 @@ func (s *Shortener) ShortenMany(ctx context.Context, urls map[string]OriginalURL
 
 func NewShortener(
 	codeGenerator CodeGenerator,
-	urlsStorage store.Storage,
+	urlsStorage urls.Storage,
 	baseURL string,
 ) *Shortener {
 	shortener := Shortener{

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -45,7 +45,7 @@ func TestCreateShortBatch(t *testing.T) {
 
 	for _, test := range tests {
 		codeGenerator := services.NewTestGenerator(codePrefix)
-		urlsStorage := store.NewMemoryStorage()
+		urlsStorage := urls.NewMemoryStorage()
 		shortener := services.NewShortener(
 			codeGenerator,
 			urlsStorage,

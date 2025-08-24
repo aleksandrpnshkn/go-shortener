@@ -94,5 +94,5 @@ docker compose down --volumes
 
 Пример команды для mockgen:
 ```
-mockgen -destination=mocks/mock_storage.go -package=mocks ./internal/store Storage
+mockgen -destination=internal/mocks/mock_store_urls_storage.go -package=mocks -mock_names Storage=MockURLsStorage ./internal/store/urls Storage
 ```

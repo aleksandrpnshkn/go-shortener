@@ -3,10 +3,10 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 )
 
-func GetURLByCode(urlsStorage store.Storage) http.HandlerFunc {
+func GetURLByCode(urlsStorage urls.Storage) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")
 

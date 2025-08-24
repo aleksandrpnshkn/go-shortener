@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -19,7 +19,7 @@ func TestCreateShortURLPlain(t *testing.T) {
 	fullURL := "http://example.com"
 
 	codeGenerator := services.NewTestGenerator("tEsT")
-	urlsStorage := store.NewMemoryStorage()
+	urlsStorage := urls.NewMemoryStorage()
 	shortener := services.NewShortener(
 		codeGenerator,
 		urlsStorage,
@@ -81,7 +81,7 @@ func TestCreateShort(t *testing.T) {
 
 	for _, test := range tests {
 		codeGenerator := services.NewTestGenerator(codePrefix)
-		urlsStorage := store.NewMemoryStorage()
+		urlsStorage := urls.NewMemoryStorage()
 		shortener := services.NewShortener(
 			codeGenerator,
 			urlsStorage,
@@ -114,8 +114,8 @@ func TestCreateShortDuplicate(t *testing.T) {
 	originalURL := "http://example.com"
 
 	codeGenerator := services.NewTestGenerator(codePrefix)
-	urlsStorage := store.NewMemoryStorage()
-	urlsStorage.Set(context.Background(), store.ShortenedURL{
+	urlsStorage := urls.NewMemoryStorage()
+	urlsStorage.Set(context.Background(), urls.ShortenedURL{
 		Code:        "test123",
 		OriginalURL: originalURL,
 	})

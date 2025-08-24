@@ -3,17 +3,15 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store"
 )
 
-func GetURLByCode(URLsStorage *services.URLsStorage) http.HandlerFunc {
+func GetURLByCode(urlsStorage store.Storage) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")
 
-		code := services.Code(req.PathValue("code"))
-		url, ok := URLsStorage.Get(code)
-
-		if !ok {
+		url, err := urlsStorage.Get(req.Context(), req.PathValue("code"))
+		if err != nil {
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}

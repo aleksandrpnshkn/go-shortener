@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
@@ -15,26 +16,28 @@ import (
 
 const codesLength = 8
 
-func Run(config *config.Config, logger *zap.Logger, store store.Storage) error {
+func Run(ctx context.Context, config *config.Config, logger *zap.Logger, storage store.Storage) error {
 	router := chi.NewRouter()
 
 	codeGenerator := services.NewRandomCodeGenerator(codesLength)
-	URLsStorage := services.NewURLsStorage(store)
 	shortener := services.NewShortener(
 		codeGenerator,
-		URLsStorage,
+		storage,
 		config.PublicBaseURL,
 	)
 
 	router.Use(middlewares.NewLogMiddleware(logger))
-	router.Use(compress.DecompressMiddleware)
-	router.Use(compress.CompressMiddleware)
+	router.Use(compress.NewDecompressMiddleware(logger))
+	router.Use(compress.NewCompressMiddleware(logger))
 
-	router.Get("/{code}", handlers.GetURLByCode(URLsStorage))
-	router.Post("/", handlers.CreateShortURLPlain(shortener))
+	router.Get("/{code}", handlers.GetURLByCode(storage))
+	router.Post("/", handlers.CreateShortURLPlain(shortener, logger))
 	router.Get("/", handlers.FallbackHandler())
 
-	router.Post("/api/shorten", handlers.CreateShortURL(shortener))
+	router.Post("/api/shorten", handlers.CreateShortURL(shortener, logger))
+	router.Post("/api/shorten/batch", handlers.CreateShortURLBatch(shortener, logger))
+
+	router.Get("/ping", handlers.PingHandler(ctx, storage, logger))
 
 	logger.Info("Running app...")
 

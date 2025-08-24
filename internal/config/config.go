@@ -11,6 +11,7 @@ type Config struct {
 	PublicBaseURL   string
 	LogLevel        string
 	FileStoragePath string
+	DatabaseDSN     string
 }
 
 func New() *Config {
@@ -26,35 +27,41 @@ func New() *Config {
 		PublicBaseURL:   "http://localhost:8080",
 		LogLevel:        "info",
 		FileStoragePath: fileStoragePath,
+		DatabaseDSN:     "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable",
 	}
 
-	flag.StringVar(&config.ServerAddr, "a", config.ServerAddr, "Net address host:port")
+	flag.StringVar(&config.ServerAddr, "a", config.ServerAddr, "net address host:port")
 	flag.StringVar(&config.PublicBaseURL, "b", config.PublicBaseURL, "public base url for short links")
 	flag.StringVar(&config.FileStoragePath, "f", config.FileStoragePath, "file storage path")
+	flag.StringVar(&config.DatabaseDSN, "d", config.DatabaseDSN, "database DSN")
 
 	flag.Parse()
 
-	envServerAddr := os.Getenv("SERVER_ADDRESS")
-	if envServerAddr != "" {
+	envServerAddr, ok := os.LookupEnv("SERVER_ADDRESS")
+	if ok {
 		config.ServerAddr = envServerAddr
 	}
 
-	envPublicBaseURL := os.Getenv("BASE_URL")
-	if envPublicBaseURL != "" {
+	envPublicBaseURL, ok := os.LookupEnv("BASE_URL")
+	if ok {
 		config.PublicBaseURL = envPublicBaseURL
 	}
+	config.PublicBaseURL = strings.TrimRight(config.PublicBaseURL, "/")
 
-	envLogLevel := os.Getenv("LOG_LEVEL")
-	if envLogLevel != "" {
+	envLogLevel, ok := os.LookupEnv("LOG_LEVEL")
+	if ok {
 		config.LogLevel = envLogLevel
 	}
 
-	envFileStoragePath := os.Getenv("FILE_STORAGE_PATH")
-	if envFileStoragePath != "" {
+	envFileStoragePath, ok := os.LookupEnv("FILE_STORAGE_PATH")
+	if ok {
 		config.FileStoragePath = envFileStoragePath
 	}
 
-	config.PublicBaseURL = strings.TrimRight(config.PublicBaseURL, "/")
+	envDatabaseDSN, ok := os.LookupEnv("DATABASE_DSN")
+	if ok {
+		config.DatabaseDSN = envDatabaseDSN
+	}
 
 	return &config
 }

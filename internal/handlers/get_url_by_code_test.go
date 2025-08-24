@@ -1,11 +1,12 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,15 +15,18 @@ func TestGetURLByCode(t *testing.T) {
 	existedCode := "tEsT"
 	fullURL := "http://example.com"
 
-	URLsStorage := services.NewURLsTestStorage()
-	URLsStorage.Set(services.Code(existedCode), services.OriginalURL(fullURL))
+	urlsStorage := store.NewMemoryStorage()
+	urlsStorage.Set(context.Background(), store.ShortenedURL{
+		Code:        existedCode,
+		OriginalURL: fullURL,
+	})
 
 	t.Run("existed short url", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/"+existedCode, nil)
 		req.SetPathValue("code", existedCode)
 
-		GetURLByCode(URLsStorage)(w, req)
+		GetURLByCode(urlsStorage)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()
@@ -40,7 +44,7 @@ func TestGetURLByCode(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/"+unknownCode, nil)
 		req.SetPathValue("code", unknownCode)
 
-		GetURLByCode(URLsStorage)(w, req)
+		GetURLByCode(urlsStorage)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()

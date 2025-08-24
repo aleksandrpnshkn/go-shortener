@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"go.uber.org/zap"
 )
 
 type decompressReader struct {
@@ -37,21 +39,24 @@ func newDecompressReader(req io.ReadCloser) (*decompressReader, error) {
 	return decompressReader, nil
 }
 
-func DecompressMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		contentEncoding := req.Header.Get("Content-Encoding")
-		sendsGzip := strings.Contains(contentEncoding, "gzip")
+func NewDecompressMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+			contentEncoding := req.Header.Get("Content-Encoding")
+			sendsGzip := strings.Contains(contentEncoding, "gzip")
 
-		if sendsGzip {
-			decompressedBody, err := newDecompressReader(req.Body)
-			if err != nil {
-				res.WriteHeader(http.StatusInternalServerError)
-				return
+			if sendsGzip {
+				decompressedBody, err := newDecompressReader(req.Body)
+				if err != nil {
+					logger.Error("failed to decompress request", zap.Error(err))
+					res.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				defer decompressedBody.Close()
+				req.Body = decompressedBody
 			}
-			defer decompressedBody.Close()
-			req.Body = decompressedBody
-		}
 
-		next.ServeHTTP(res, req)
-	})
+			next.ServeHTTP(res, req)
+		})
+	}
 }

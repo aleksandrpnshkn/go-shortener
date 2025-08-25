@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 )
 
 type FileStorage struct {
@@ -28,15 +30,15 @@ func (f *FileStorage) Ping(ctx context.Context) error {
 	return nil
 }
 
-func (f *FileStorage) Set(ctx context.Context, url ShortenedURL) (storedURL ShortenedURL, hasConflict bool, err error) {
-	_, hasConflict, err = f.SetMany(ctx, map[string]ShortenedURL{url.Code: url})
+func (f *FileStorage) Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error) {
+	_, hasConflict, err = f.SetMany(ctx, map[string]ShortenedURL{url.Code: url}, user)
 	if err != nil {
 		return url, hasConflict, err
 	}
 	return url, hasConflict, nil
 }
 
-func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
+func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
 	lines := [][]byte{}
 
 	for _, url := range urls {
@@ -72,6 +74,10 @@ func (f *FileStorage) Get(ctx context.Context, code string) (originalURL string,
 		return "", ErrCodeNotFound
 	}
 	return value, nil
+}
+
+func (f *FileStorage) GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
+	return []ShortenedURL{}, nil
 }
 
 func (f *FileStorage) Close() error {

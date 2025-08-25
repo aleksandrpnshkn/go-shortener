@@ -15,6 +15,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-chi/chi/v5 v5.2.1 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/jackc/pgpassfile v1.0.0 // indirect

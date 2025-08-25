@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"go.uber.org/zap"
 )
 
@@ -31,6 +32,22 @@ func NewURLsStorage(
 	storage, err = urls.NewFileStorage(fileStoragePath)
 	if err != nil {
 		return nil, errors.New("failed to init urls file storage")
+	}
+
+	return storage, nil
+}
+
+func NewUsersStorage(
+	ctx context.Context,
+	databaseDSN string,
+	logger *zap.Logger,
+) (users.Storage, error) {
+	var storage users.Storage
+
+	storage, err := users.NewSQLStorage(ctx, databaseDSN)
+	if err != nil {
+		logger.Warn("failed to init users SQL storage", zap.Error(err))
+		storage = users.NewMemoryStorage()
 	}
 
 	return storage, nil

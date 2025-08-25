@@ -30,7 +30,13 @@ func main() {
 	}
 	defer urlsStorage.Close()
 
-	err = app.Run(ctx, config, logger, urlsStorage)
+	usersStorage, err := store.NewUsersStorage(ctx, config.DatabaseDSN, logger)
+	if err != nil {
+		logger.Fatal("failed to init users storage", zap.Error(err))
+	}
+	defer usersStorage.Close()
+
+	err = app.Run(ctx, config, logger, urlsStorage, usersStorage)
 	if err != nil {
 		logger.Fatal("failed to run app", zap.Error(err))
 	}

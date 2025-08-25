@@ -10,6 +10,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/middlewares/compress"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -21,6 +22,7 @@ func Run(
 	config *config.Config,
 	logger *zap.Logger,
 	urlsStorage urls.Storage,
+	usersStorage users.Storage,
 ) error {
 	router := chi.NewRouter()
 
@@ -31,16 +33,20 @@ func Run(
 		config.PublicBaseURL,
 	)
 
+	auther := services.NewAuther(usersStorage, config.AuthSecretKey)
+
 	router.Use(middlewares.NewLogMiddleware(logger))
 	router.Use(compress.NewDecompressMiddleware(logger))
 	router.Use(compress.NewCompressMiddleware(logger))
+	router.Use(middlewares.NewAuthMiddleware(logger, auther))
 
 	router.Get("/{code}", handlers.GetURLByCode(urlsStorage))
-	router.Post("/", handlers.CreateShortURLPlain(shortener, logger))
+	router.Post("/", handlers.CreateShortURLPlain(shortener, logger, auther))
 	router.Get("/", handlers.FallbackHandler())
 
-	router.Post("/api/shorten", handlers.CreateShortURL(shortener, logger))
-	router.Post("/api/shorten/batch", handlers.CreateShortURLBatch(shortener, logger))
+	router.Post("/api/shorten", handlers.CreateShortURL(shortener, logger, auther))
+	router.Post("/api/shorten/batch", handlers.CreateShortURLBatch(shortener, logger, auther))
+	router.Get("/api/user/urls", handlers.GetUserURLs(shortener, logger, auther))
 
 	router.Get("/ping", handlers.PingHandler(ctx, urlsStorage, logger))
 

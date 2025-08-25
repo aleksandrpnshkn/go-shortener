@@ -12,6 +12,7 @@ type Config struct {
 	LogLevel        string
 	FileStoragePath string
 	DatabaseDSN     string
+	AuthSecretKey   string
 }
 
 func New() *Config {
@@ -28,12 +29,14 @@ func New() *Config {
 		LogLevel:        "info",
 		FileStoragePath: fileStoragePath,
 		DatabaseDSN:     "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable",
+		AuthSecretKey:   "changeme",
 	}
 
 	flag.StringVar(&config.ServerAddr, "a", config.ServerAddr, "net address host:port")
 	flag.StringVar(&config.PublicBaseURL, "b", config.PublicBaseURL, "public base url for short links")
 	flag.StringVar(&config.FileStoragePath, "f", config.FileStoragePath, "file storage path")
 	flag.StringVar(&config.DatabaseDSN, "d", config.DatabaseDSN, "database DSN")
+	flag.StringVar(&config.AuthSecretKey, "s", config.DatabaseDSN, "auth secret key for signing JWT tokens")
 
 	flag.Parse()
 
@@ -61,6 +64,11 @@ func New() *Config {
 	envDatabaseDSN, ok := os.LookupEnv("DATABASE_DSN")
 	if ok {
 		config.DatabaseDSN = envDatabaseDSN
+	}
+
+	authSecretKey, ok := os.LookupEnv("AUTH_SECRET_KEY")
+	if ok {
+		config.AuthSecretKey = authSecretKey
 	}
 
 	return &config

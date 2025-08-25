@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	urls "github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
+	users "github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -70,6 +71,21 @@ func (mr *MockURLsStorageMockRecorder) Get(ctx, code any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockURLsStorage)(nil).Get), ctx, code)
 }
 
+// GetByUserID mocks base method.
+func (m *MockURLsStorage) GetByUserID(ctx context.Context, user *users.User) ([]urls.ShortenedURL, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByUserID", ctx, user)
+	ret0, _ := ret[0].([]urls.ShortenedURL)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByUserID indicates an expected call of GetByUserID.
+func (mr *MockURLsStorageMockRecorder) GetByUserID(ctx, user any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByUserID", reflect.TypeOf((*MockURLsStorage)(nil).GetByUserID), ctx, user)
+}
+
 // Ping mocks base method.
 func (m *MockURLsStorage) Ping(ctx context.Context) error {
 	m.ctrl.T.Helper()
@@ -85,9 +101,9 @@ func (mr *MockURLsStorageMockRecorder) Ping(ctx any) *gomock.Call {
 }
 
 // Set mocks base method.
-func (m *MockURLsStorage) Set(ctx context.Context, url urls.ShortenedURL) (urls.ShortenedURL, bool, error) {
+func (m *MockURLsStorage) Set(ctx context.Context, url urls.ShortenedURL, user *users.User) (urls.ShortenedURL, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Set", ctx, url)
+	ret := m.ctrl.Call(m, "Set", ctx, url, user)
 	ret0, _ := ret[0].(urls.ShortenedURL)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
@@ -95,15 +111,15 @@ func (m *MockURLsStorage) Set(ctx context.Context, url urls.ShortenedURL) (urls.
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockURLsStorageMockRecorder) Set(ctx, url any) *gomock.Call {
+func (mr *MockURLsStorageMockRecorder) Set(ctx, url, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockURLsStorage)(nil).Set), ctx, url)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockURLsStorage)(nil).Set), ctx, url, user)
 }
 
 // SetMany mocks base method.
-func (m *MockURLsStorage) SetMany(ctx context.Context, arg1 map[string]urls.ShortenedURL) (map[string]urls.ShortenedURL, bool, error) {
+func (m *MockURLsStorage) SetMany(ctx context.Context, arg1 map[string]urls.ShortenedURL, user *users.User) (map[string]urls.ShortenedURL, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetMany", ctx, arg1)
+	ret := m.ctrl.Call(m, "SetMany", ctx, arg1, user)
 	ret0, _ := ret[0].(map[string]urls.ShortenedURL)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
@@ -111,7 +127,7 @@ func (m *MockURLsStorage) SetMany(ctx context.Context, arg1 map[string]urls.Shor
 }
 
 // SetMany indicates an expected call of SetMany.
-func (mr *MockURLsStorageMockRecorder) SetMany(ctx, arg1 any) *gomock.Call {
+func (mr *MockURLsStorageMockRecorder) SetMany(ctx, arg1, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMany", reflect.TypeOf((*MockURLsStorage)(nil).SetMany), ctx, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMany", reflect.TypeOf((*MockURLsStorage)(nil).SetMany), ctx, arg1, user)
 }

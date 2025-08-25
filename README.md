@@ -63,6 +63,12 @@ curl -X POST -d 'https://practicum.yandex.ru/' -i localhost:8080
 
 curl -X POST -H "Content-Type: application/json" -d '{"url": "https://practicum.yandex.ru/"}' --compressed -i localhost:8080/api/shorten
 
+# с куками авторизации
+curl -X POST -H "Content-Type: application/json" --cookie "auth_token=TOKEN" -d '{"url": "https://example.com/"}' --compressed -i localhost:8080/api/shorten
+
+# список урлов юзера
+curl -H "Content-Type: application/json" --cookie "auth_token=TOKEN" -i localhost:8080/api/user/urls
+
 curl -X POST -H "Content-Type: application/json" -d '[{"correlation_id": "c1", "original_url": "https://practicum.yandex.ru/"}, {"correlation_id": "c2", "original_url": "https://practicum.yandex.ru/test"}]' --compressed -i localhost:8080/api/shorten/batch
 
 curl -i localhost:8080/EwHXdJfB
@@ -83,16 +89,17 @@ psql --host 127.0.0.1 --port 5432 --username admin --password --dbname shortener
 ```bash
 cd go-shortener/cmd/shortener
 
-~/golang-migrate/migrate create -ext sql -dir ./migrations -seq create_example_table
+~/golang-migrate/migrate create -ext sql -dir ./internal/store/migrations -seq create_example_table
 
-~/golang-migrate/migrate -database "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable" -path ./migrations up
-~/golang-migrate/migrate -database "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable" -path ./migrations down
+~/golang-migrate/migrate -database "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable" -path ./internal/store/migrations up
+~/golang-migrate/migrate -database "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable" -path ./internal/store/migrations down
 
 # Для очистки базы
 docker compose down --volumes
 ```
 
-Пример команды для mockgen:
-```
-mockgen -destination=internal/mocks/mock_store_urls_storage.go -package=mocks -mock_names Storage=MockURLsStorage ./internal/store/urls Storage
+Сгенерировать моки:
+```bash
+# из корня проекта
+./generate-mocks.bash
 ```

@@ -6,8 +6,6 @@ import (
 	"errors"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -35,7 +33,14 @@ func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, user *users.User
 func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
 	hasConflict = false
 
-	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO urls (code, original_url, user_id) VALUES ($1, $2, $3)")
+	stmt, err := s.db.PrepareContext(ctx, `
+		INSERT INTO urls (code, original_url, user_id) 
+		VALUES ($1, $2, $3) 
+		ON CONFLICT (original_url)
+		DO UPDATE SET original_url = $2
+		RETURNING code, original_url
+	`)
+
 	if err != nil {
 		return nil, hasConflict, err
 	}
@@ -49,24 +54,21 @@ func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, 
 	storedURLs = make(map[string]ShortenedURL, len(urls))
 
 	for key, url := range urls {
-		_, err := stmt.ExecContext(ctx, url.Code, url.OriginalURL, user.ID)
-		var pgerr *pgconn.PgError
-		if errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
-			storedCode, err := s.getCode(ctx, url.OriginalURL)
+		row := stmt.QueryRowContext(ctx, url.Code, url.OriginalURL, user.ID)
 
-			if err == nil {
-				hasConflict = true
-				url.Code = storedCode
-				storedURLs[key] = url
-				continue
-			}
-		}
+		var storedURL ShortenedURL
+
+		err = row.Scan(&storedURL.Code, &storedURL.OriginalURL)
 		if err != nil {
 			tx.Rollback()
 			return nil, hasConflict, err
 		}
 
-		storedURLs[key] = url
+		if storedURL.Code != url.Code {
+			hasConflict = true
+		}
+
+		storedURLs[key] = storedURL
 	}
 
 	return storedURLs, hasConflict, tx.Commit()
@@ -111,19 +113,6 @@ func (s *SQLStorage) GetByUserID(ctx context.Context, user *users.User) ([]Short
 	}
 
 	return urls, nil
-}
-
-func (s *SQLStorage) getCode(ctx context.Context, originalURL string) (code string, err error) {
-	row := s.db.QueryRowContext(ctx, "SELECT code FROM urls WHERE original_url = $1", originalURL)
-	err = row.Scan(&code)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return "", ErrOriginalURLNotFound
-		}
-		return "", err
-	}
-
-	return code, nil
 }
 
 func NewSQLStorage(ctx context.Context, databaseDSN string) (*SQLStorage, error) {

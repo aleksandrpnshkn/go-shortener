@@ -6,19 +6,22 @@ import (
 	"errors"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type SQLStorage struct {
-	db *sql.DB
+	pgxpool *pgxpool.Pool
 }
 
 func (s *SQLStorage) Ping(ctx context.Context) error {
-	return s.db.PingContext(ctx)
+	return s.pgxpool.Ping(ctx)
 }
 
 func (s *SQLStorage) Close() error {
-	return s.db.Close()
+	s.pgxpool.Close()
+	return nil
 }
 
 func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error) {
@@ -33,34 +36,31 @@ func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, user *users.User
 func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
 	hasConflict = false
 
-	stmt, err := s.db.PrepareContext(ctx, `
-		INSERT INTO urls (code, original_url, user_id) 
-		VALUES ($1, $2, $3) 
-		ON CONFLICT (original_url)
-		DO UPDATE SET original_url = $2
-		RETURNING code, original_url
-	`)
-
+	tx, err := s.pgxpool.Begin(ctx)
 	if err != nil {
 		return nil, hasConflict, err
 	}
-	defer stmt.Close()
-
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, hasConflict, err
-	}
+	defer tx.Rollback(ctx)
 
 	storedURLs = make(map[string]ShortenedURL, len(urls))
 
 	for key, url := range urls {
-		row := stmt.QueryRowContext(ctx, url.Code, url.OriginalURL, user.ID)
+		row := s.pgxpool.QueryRow(ctx, `
+			INSERT INTO urls (code, original_url, user_id) 
+			VALUES (@code, @originalUrl, @userId) 
+			ON CONFLICT (original_url)
+			DO UPDATE SET original_url = @originalUrl
+			RETURNING code, original_url
+		`, pgx.NamedArgs{
+			"code":        url.Code,
+			"originalUrl": url.OriginalURL,
+			"userId":      user.ID,
+		})
 
 		var storedURL ShortenedURL
 
 		err = row.Scan(&storedURL.Code, &storedURL.OriginalURL)
 		if err != nil {
-			tx.Rollback()
 			return nil, hasConflict, err
 		}
 
@@ -71,11 +71,11 @@ func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, 
 		storedURLs[key] = storedURL
 	}
 
-	return storedURLs, hasConflict, tx.Commit()
+	return storedURLs, hasConflict, tx.Commit(ctx)
 }
 
 func (s *SQLStorage) Get(ctx context.Context, code string) (originalURL string, err error) {
-	row := s.db.QueryRowContext(ctx, "SELECT original_url FROM urls WHERE code = $1", code)
+	row := s.pgxpool.QueryRow(ctx, "SELECT original_url FROM urls WHERE code = $1", code)
 	err = row.Scan(&originalURL)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -90,7 +90,7 @@ func (s *SQLStorage) Get(ctx context.Context, code string) (originalURL string, 
 func (s *SQLStorage) GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
 	urls := []ShortenedURL{}
 
-	rows, err := s.db.QueryContext(ctx, "SELECT code, original_url FROM urls WHERE user_id = $1", user.ID)
+	rows, err := s.pgxpool.Query(ctx, "SELECT code, original_url FROM urls WHERE user_id = $1", user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -116,13 +116,13 @@ func (s *SQLStorage) GetByUserID(ctx context.Context, user *users.User) ([]Short
 }
 
 func NewSQLStorage(ctx context.Context, databaseDSN string) (*SQLStorage, error) {
-	db, err := sql.Open("pgx", databaseDSN)
+	pool, err := pgxpool.New(ctx, databaseDSN)
 	if err != nil {
 		return nil, err
 	}
 
 	storage := SQLStorage{
-		db: db,
+		pgxpool: pool,
 	}
 
 	err = storage.Ping(ctx)

@@ -40,17 +40,15 @@ source ~/.profile
 
 Запустить сервер:
 ```bash
-cd cmd/shortener
-
-go build -o shortener *.go \
-    && ./shortener
+go build -o cmd/shortener/shortener cmd/shortener/*go \
+    && ./cmd/shortener/shortener
 ```
 
 Запустить тест:
 ```bash
 # template
 # Параметры запуска итераций разные, можно чекнуть .github/workflows/metricstest.yml
-go build -o shortener *.go \
+go build -o cmd/shortener/shortener cmd/shortener/*go \
     && shortenertest -test.v -test.run=^TestIteration1$ -binary-path=./shortener
 
 # Мои тесты (count для отключения кэша, помогает отлавливать flaky-тесты)

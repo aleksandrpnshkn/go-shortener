@@ -1,4 +1,5 @@
 ALTER TABLE urls
+DROP CONSTRAINT urls_id_pkey,
 DROP user_id CASCADE;
 
 DROP TABLE IF EXISTS users;

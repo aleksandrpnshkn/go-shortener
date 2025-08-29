@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -74,23 +75,25 @@ func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, 
 	return storedURLs, hasConflict, tx.Commit(ctx)
 }
 
-func (s *SQLStorage) Get(ctx context.Context, code string) (originalURL string, err error) {
-	row := s.pgxpool.QueryRow(ctx, "SELECT original_url FROM urls WHERE code = $1", code)
-	err = row.Scan(&originalURL)
+func (s *SQLStorage) Get(ctx context.Context, code types.Code) (ShortenedURL, error) {
+	var shortenedURL ShortenedURL
+
+	row := s.pgxpool.QueryRow(ctx, "SELECT code, original_url, is_deleted FROM urls WHERE code = $1", code)
+	err := row.Scan(&shortenedURL.Code, &shortenedURL.OriginalURL, &shortenedURL.IsDeleted)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", ErrCodeNotFound
+			return ShortenedURL{}, ErrCodeNotFound
 		}
-		return "", err
+		return ShortenedURL{}, err
 	}
 
-	return originalURL, nil
+	return shortenedURL, nil
 }
 
 func (s *SQLStorage) GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
 	urls := []ShortenedURL{}
 
-	rows, err := s.pgxpool.Query(ctx, "SELECT code, original_url FROM urls WHERE user_id = $1", user.ID)
+	rows, err := s.pgxpool.Query(ctx, "SELECT code, original_url FROM urls WHERE user_id = $1 AND is_deleted = false", user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -113,6 +116,17 @@ func (s *SQLStorage) GetByUserID(ctx context.Context, user *users.User) ([]Short
 	}
 
 	return urls, nil
+}
+
+func (s *SQLStorage) DeleteManyByUserID(ctx context.Context, codes []types.Code, user *users.User) {
+	batch := pgx.Batch{}
+
+	for _, code := range codes {
+		batch.Queue("UPDATE urls WHERE user_id = $1 AND code = $2 SET is_deleted = true", user.ID, code)
+	}
+
+	results := s.pgxpool.SendBatch(ctx, &batch)
+	defer results.Close()
 }
 
 func NewSQLStorage(ctx context.Context, databaseDSN string) (*SQLStorage, error) {

@@ -12,6 +12,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -58,7 +59,7 @@ func TestCreateShortURLPlain(t *testing.T) {
 		assert.Equal(t, "http://localhost/tEsT1", rawShortURL, "returned short url")
 
 		storedURL, _ := urlsStorage.Get(context.Background(), "tEsT1")
-		assert.Equal(t, fullURL, string(storedURL), "new code stored")
+		assert.Equal(t, fullURL, string(storedURL.OriginalURL), "new code stored")
 	})
 }
 
@@ -136,7 +137,7 @@ func TestCreateShortDuplicate(t *testing.T) {
 	defer ctrl.Finish()
 
 	codePrefix := "tEsT"
-	originalURL := "http://example.com"
+	originalURL := types.OriginalURL("http://example.com")
 
 	user := users.User{
 		ID: 123,
@@ -159,7 +160,7 @@ func TestCreateShortDuplicate(t *testing.T) {
 
 	t.Run("create duplicate url", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		reqBody := strings.NewReader(`{"url":"` + originalURL + `"}`)
+		reqBody := strings.NewReader(`{"url":"` + string(originalURL) + `"}`)
 		req := httptest.NewRequest(http.MethodPost, "/api/shorten", reqBody)
 
 		CreateShortURL(shortener, zap.NewExample(), auther)(w, req)

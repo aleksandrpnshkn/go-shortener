@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"go.uber.org/zap"
 )
 
@@ -53,10 +54,10 @@ func CreateShortURLBatch(
 			return
 		}
 
-		urls := make(map[string]services.OriginalURL, len(requestData))
+		urls := make(map[string]types.OriginalURL, len(requestData))
 
 		for _, url := range requestData {
-			urls[url.CorrelationID] = services.OriginalURL(url.OriginalURL)
+			urls[url.CorrelationID] = types.OriginalURL(url.OriginalURL)
 		}
 
 		shortURLs, _, err := shortener.ShortenMany(req.Context(), urls, user)

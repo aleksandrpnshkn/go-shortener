@@ -21,9 +21,9 @@ func TestFileStorage(t *testing.T) {
 
 		assert.Equal(t, 2, fileStorage.lastID, "last id loaded")
 
-		originalURL, err := fileStorage.Get(context.Background(), "test2")
+		shortenedURL, err := fileStorage.Get(context.Background(), "test2")
 
 		assert.NoError(t, err, "entry found")
-		assert.Equal(t, "http://example2.com", originalURL, "original url loaded")
+		assert.Equal(t, "http://example2.com", string(shortenedURL.OriginalURL), "original url loaded")
 	})
 }

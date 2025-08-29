@@ -5,15 +5,12 @@ import (
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
-type OriginalURL string
-
-type ShortURL string
-
 type ShortenedURL struct {
-	OriginalURL OriginalURL
-	ShortURL    ShortURL
+	OriginalURL types.OriginalURL
+	ShortURL    types.ShortURL
 }
 
 type Shortener struct {
@@ -22,10 +19,10 @@ type Shortener struct {
 	baseURL       string
 }
 
-func (s *Shortener) Shorten(ctx context.Context, originalURL OriginalURL, user *users.User) (shortURL ShortURL, hasConflict bool, err error) {
+func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, user *users.User) (shortURL types.ShortURL, hasConflict bool, err error) {
 	const fakeCorrelationID = "fake_id"
 
-	shortURLs, hasConflict, err := s.ShortenMany(ctx, map[string]OriginalURL{fakeCorrelationID: originalURL}, user)
+	shortURLs, hasConflict, err := s.ShortenMany(ctx, map[string]types.OriginalURL{fakeCorrelationID: originalURL}, user)
 	if err != nil {
 		return "", hasConflict, err
 	}
@@ -35,15 +32,15 @@ func (s *Shortener) Shorten(ctx context.Context, originalURL OriginalURL, user *
 
 func (s *Shortener) ShortenMany(
 	ctx context.Context,
-	originalURLs map[string]OriginalURL,
+	originalURLs map[string]types.OriginalURL,
 	user *users.User,
-) (shortURLs map[string]ShortURL, hasConflict bool, err error) {
-	codesInBatch := make(map[Code]bool, len(originalURLs))
+) (shortURLs map[string]types.ShortURL, hasConflict bool, err error) {
+	codesInBatch := make(map[types.Code]bool, len(originalURLs))
 	urlsToStore := make(map[string]urls.ShortenedURL, len(originalURLs))
-	shortURLs = make(map[string]ShortURL, len(originalURLs))
+	shortURLs = make(map[string]types.ShortURL, len(originalURLs))
 
 	for correlationID, url := range originalURLs {
-		var code Code
+		var code types.Code
 		codeExistsInCurrentBatch := true
 		codeExistsInDatabase := true
 		for codeExistsInCurrentBatch || codeExistsInDatabase {
@@ -51,15 +48,15 @@ func (s *Shortener) ShortenMany(
 
 			_, codeExistsInCurrentBatch = codesInBatch[code]
 
-			_, err = s.urlsStorage.Get(ctx, string(code))
+			_, err = s.urlsStorage.Get(ctx, code)
 			codeExistsInDatabase = err == nil
 		}
 
 		codesInBatch[code] = true
 
 		urlsToStore[correlationID] = urls.ShortenedURL{
-			Code:        string(code),
-			OriginalURL: string(url),
+			Code:        code,
+			OriginalURL: url,
 		}
 	}
 
@@ -86,15 +83,19 @@ func (s *Shortener) GetUserURLs(ctx context.Context, user *users.User) ([]Shorte
 	for _, url := range userURLs {
 		result = append(result, ShortenedURL{
 			ShortURL:    s.makeShortURL(url.Code),
-			OriginalURL: OriginalURL(url.OriginalURL),
+			OriginalURL: types.OriginalURL(url.OriginalURL),
 		})
 	}
 
 	return result, nil
 }
 
-func (s *Shortener) makeShortURL(code string) ShortURL {
-	return ShortURL(s.baseURL + "/" + code)
+func (s *Shortener) DeleteUserURLs(ctx context.Context, codes []types.Code, user *users.User) {
+	s.urlsStorage.DeleteManyByUserID(ctx, codes, user)
+}
+
+func (s *Shortener) makeShortURL(code types.Code) types.ShortURL {
+	return types.ShortURL(s.baseURL + "/" + string(code))
 }
 
 func NewShortener(

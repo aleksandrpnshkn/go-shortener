@@ -5,11 +5,13 @@ import (
 	"errors"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
 type ShortenedURL struct {
-	Code        string
-	OriginalURL string
+	Code        types.Code
+	OriginalURL types.OriginalURL
+	IsDeleted   bool
 }
 
 type Storage interface {
@@ -19,9 +21,11 @@ type Storage interface {
 
 	SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflict bool, err error)
 
-	Get(ctx context.Context, code string) (originalURL string, err error)
+	Get(ctx context.Context, code types.Code) (ShortenedURL, error)
 
 	GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error)
+
+	DeleteManyByUserID(ctx context.Context, codes []types.Code, user *users.User)
 
 	Close() error
 }

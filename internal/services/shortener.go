@@ -90,10 +90,6 @@ func (s *Shortener) GetUserURLs(ctx context.Context, user *users.User) ([]Shorte
 	return result, nil
 }
 
-func (s *Shortener) DeleteUserURLs(ctx context.Context, codes []types.Code, user *users.User) {
-	s.urlsStorage.DeleteManyByUserID(ctx, codes, user)
-}
-
 func (s *Shortener) makeShortURL(code types.Code) types.ShortURL {
 	return types.ShortURL(s.baseURL + "/" + string(code))
 }

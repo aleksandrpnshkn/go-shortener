@@ -27,8 +27,8 @@ func (m *MemoryStorage) GetByUserID(ctx context.Context, user *users.User) ([]Sh
 	return []ShortenedURL{}, nil
 }
 
-func (m *MemoryStorage) DeleteManyByUserID(ctx context.Context, codes []types.Code, user *users.User) {
-	// do nothing...
+func (m *MemoryStorage) DeleteManyByUserID(ctx context.Context, commands []DeleteCode) error {
+	return nil
 }
 
 func (m *MemoryStorage) Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error) {

@@ -14,10 +14,10 @@ import (
 )
 
 func DeleteUserURLs(
-	shortener *services.Shortener,
 	logger *zap.Logger,
 	auther services.Auther,
 	deleteWg *sync.WaitGroup,
+	deletionBatcher *services.DeletionBatcher,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "application/json")
@@ -50,7 +50,9 @@ func DeleteUserURLs(
 			ctx, cancel := context.WithTimeout(req.Context(), time.Second*10)
 			defer cancel()
 
-			shortener.DeleteUserURLs(ctx, codes, user)
+			for _, code := range codes {
+				deletionBatcher.AddCode(ctx, code, *user)
+			}
 		}()
 
 		res.WriteHeader(http.StatusAccepted)

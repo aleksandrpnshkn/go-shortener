@@ -58,15 +58,17 @@ func (mr *MockURLsStorageMockRecorder) Close() *gomock.Call {
 }
 
 // DeleteManyByUserID mocks base method.
-func (m *MockURLsStorage) DeleteManyByUserID(ctx context.Context, codes []types.Code, user *users.User) {
+func (m *MockURLsStorage) DeleteManyByUserID(ctx context.Context, batch []urls.DeleteCode) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "DeleteManyByUserID", ctx, codes, user)
+	ret := m.ctrl.Call(m, "DeleteManyByUserID", ctx, batch)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // DeleteManyByUserID indicates an expected call of DeleteManyByUserID.
-func (mr *MockURLsStorageMockRecorder) DeleteManyByUserID(ctx, codes, user any) *gomock.Call {
+func (mr *MockURLsStorageMockRecorder) DeleteManyByUserID(ctx, batch any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteManyByUserID", reflect.TypeOf((*MockURLsStorage)(nil).DeleteManyByUserID), ctx, codes, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteManyByUserID", reflect.TypeOf((*MockURLsStorage)(nil).DeleteManyByUserID), ctx, batch)
 }
 
 // Get mocks base method.

@@ -35,6 +35,8 @@ func Run(
 	)
 
 	auther := services.NewAuther(usersStorage, config.AuthSecretKey)
+	deletionBatcher := services.NewDeletionBatcher(logger, urlsStorage)
+	defer deletionBatcher.Close()
 
 	var deleteUserUrlsWg sync.WaitGroup
 
@@ -50,7 +52,7 @@ func Run(
 	router.Post("/api/shorten", handlers.CreateShortURL(shortener, logger, auther))
 	router.Post("/api/shorten/batch", handlers.CreateShortURLBatch(shortener, logger, auther))
 	router.Get("/api/user/urls", handlers.GetUserURLs(shortener, logger, auther))
-	router.Delete("/api/user/urls", handlers.DeleteUserURLs(shortener, logger, auther, &deleteUserUrlsWg))
+	router.Delete("/api/user/urls", handlers.DeleteUserURLs(logger, auther, &deleteUserUrlsWg, deletionBatcher))
 
 	router.Get("/ping", handlers.PingHandler(ctx, urlsStorage, logger))
 

@@ -14,6 +14,11 @@ type ShortenedURL struct {
 	IsDeleted   bool
 }
 
+type DeleteCode struct {
+	User users.User
+	Code types.Code
+}
+
 type Storage interface {
 	Ping(ctx context.Context) error
 
@@ -25,7 +30,7 @@ type Storage interface {
 
 	GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error)
 
-	DeleteManyByUserID(ctx context.Context, codes []types.Code, user *users.User)
+	DeleteManyByUserID(ctx context.Context, batch []DeleteCode) error
 
 	Close() error
 }

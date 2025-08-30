@@ -81,8 +81,8 @@ func (f *FileStorage) GetByUserID(ctx context.Context, user *users.User) ([]Shor
 	return []ShortenedURL{}, nil
 }
 
-func (f *FileStorage) DeleteManyByUserID(ctx context.Context, codes []types.Code, user *users.User) {
-	// do nothing...
+func (f *FileStorage) DeleteManyByUserID(ctx context.Context, commands []DeleteCode) error {
+	return nil
 }
 
 func (f *FileStorage) Close() error {

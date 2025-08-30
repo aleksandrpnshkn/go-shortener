@@ -67,6 +67,8 @@ curl -X POST -H "Content-Type: application/json" --cookie "auth_token=TOKEN" -d 
 # список урлов юзера
 curl -H "Content-Type: application/json" --cookie "auth_token=TOKEN" -i localhost:8080/api/user/urls
 
+curl -X DELETE -H "Content-Type: application/json" --cookie "auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOjF9.ZFQYhAk2o2DDE7PMJJcYHRgb74kcYvc-oSQ9J63elnQ" -d '["mB79DTY4", "KEvfvHAz", "kekich"]' --compressed -i localhost:8080/api/user/urls
+
 curl -X POST -H "Content-Type: application/json" -d '[{"correlation_id": "c1", "original_url": "https://practicum.yandex.ru/"}, {"correlation_id": "c2", "original_url": "https://practicum.yandex.ru/test"}]' --compressed -i localhost:8080/api/shorten/batch
 
 curl -i localhost:8080/EwHXdJfB

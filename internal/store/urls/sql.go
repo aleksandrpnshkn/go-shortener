@@ -118,15 +118,24 @@ func (s *SQLStorage) GetByUserID(ctx context.Context, user *users.User) ([]Short
 	return urls, nil
 }
 
-func (s *SQLStorage) DeleteManyByUserID(ctx context.Context, codes []types.Code, user *users.User) {
+func (s *SQLStorage) DeleteManyByUserID(ctx context.Context, commands []DeleteCode) error {
 	batch := pgx.Batch{}
 
-	for _, code := range codes {
-		batch.Queue("UPDATE urls WHERE user_id = $1 AND code = $2 SET is_deleted = true", user.ID, code)
+	for _, cmd := range commands {
+		batch.Queue("UPDATE urls SET is_deleted = true WHERE user_id = $1 AND code = $2", cmd.User.ID, cmd.Code)
 	}
 
 	results := s.pgxpool.SendBatch(ctx, &batch)
 	defer results.Close()
+
+	for _, _ = range commands {
+		_, err := results.Exec()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func NewSQLStorage(ctx context.Context, databaseDSN string) (*SQLStorage, error) {

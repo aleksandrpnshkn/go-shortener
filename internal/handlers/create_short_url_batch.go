@@ -60,7 +60,7 @@ func CreateShortURLBatch(
 			urls[url.CorrelationID] = types.OriginalURL(url.OriginalURL)
 		}
 
-		shortURLs, _, err := shortener.ShortenMany(req.Context(), urls, user)
+		shortURLs, err := shortener.ShortenMany(req.Context(), urls, user)
 		if err != nil {
 			logger.Error("failed to create short url", zap.Error(err))
 			writeInternalServerError(res)

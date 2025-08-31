@@ -26,53 +26,55 @@ func (s *SQLStorage) Close() error {
 }
 
 func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error) {
-	const key = "k"
-	storedURLs, hasDuplicates, err := s.SetMany(ctx, map[string]ShortenedURL{key: url}, user)
+	row := s.pgxpool.QueryRow(ctx, `
+		INSERT INTO urls (code, original_url, user_id) 
+		VALUES (@code, @originalUrl, @userId) 
+		ON CONFLICT (original_url)
+		DO UPDATE SET original_url = @originalUrl
+		RETURNING code, original_url
+	`, pgx.NamedArgs{
+		"code":        url.Code,
+		"originalUrl": url.OriginalURL,
+		"userId":      user.ID,
+	})
+
+	err = row.Scan(&storedURL.Code, &storedURL.OriginalURL)
 	if err != nil {
-		return url, hasDuplicates, err
+		return storedURL, hasConflict, err
 	}
-	return storedURLs[key], hasDuplicates, nil
+
+	if storedURL.Code != url.Code {
+		hasConflict = true
+	}
+
+	return storedURL, hasConflict, nil
 }
 
-func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
-	hasConflict = false
+func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
+	hasConflicts = false
 
 	tx, err := s.pgxpool.Begin(ctx)
 	if err != nil {
-		return nil, hasConflict, err
+		return nil, hasConflicts, err
 	}
 	defer tx.Rollback(ctx)
 
 	storedURLs = make(map[string]ShortenedURL, len(urls))
 
 	for key, url := range urls {
-		row := s.pgxpool.QueryRow(ctx, `
-			INSERT INTO urls (code, original_url, user_id) 
-			VALUES (@code, @originalUrl, @userId) 
-			ON CONFLICT (original_url)
-			DO UPDATE SET original_url = @originalUrl
-			RETURNING code, original_url
-		`, pgx.NamedArgs{
-			"code":        url.Code,
-			"originalUrl": url.OriginalURL,
-			"userId":      user.ID,
-		})
-
-		var storedURL ShortenedURL
-
-		err = row.Scan(&storedURL.Code, &storedURL.OriginalURL)
+		storedURL, hasConflict, err := s.Set(ctx, url, user)
 		if err != nil {
-			return nil, hasConflict, err
+			return nil, hasConflicts, err
 		}
 
-		if storedURL.Code != url.Code {
-			hasConflict = true
+		if hasConflict {
+			hasConflicts = true
 		}
 
 		storedURLs[key] = storedURL
 	}
 
-	return storedURLs, hasConflict, tx.Commit(ctx)
+	return storedURLs, hasConflicts, tx.Commit(ctx)
 }
 
 func (s *SQLStorage) Get(ctx context.Context, code types.Code) (ShortenedURL, error) {
@@ -128,7 +130,7 @@ func (s *SQLStorage) DeleteManyByUserID(ctx context.Context, commands []DeleteCo
 	results := s.pgxpool.SendBatch(ctx, &batch)
 	defer results.Close()
 
-	for _, _ = range commands {
+	for range commands {
 		_, err := results.Exec()
 		if err != nil {
 			return err

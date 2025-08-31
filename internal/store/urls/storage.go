@@ -24,7 +24,7 @@ type Storage interface {
 
 	Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error)
 
-	SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflict bool, err error)
+	SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error)
 
 	Get(ctx context.Context, code types.Code) (ShortenedURL, error)
 

@@ -41,21 +41,21 @@ func (m *MemoryStorage) Set(ctx context.Context, url ShortenedURL, user *users.U
 	return storedURLs[key], hasConflict, err
 }
 
-func (m *MemoryStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
-	hasConflict = false
+func (m *MemoryStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
+	hasConflicts = false
 	storedURLs = make(map[string]ShortenedURL, len(urls))
 
 	for key, url := range urls {
 		for _, storedURL := range m.cache {
 			if storedURL.OriginalURL == url.OriginalURL {
-				hasConflict = true
+				hasConflicts = true
 
 				storedURLs[key] = storedURL
 			}
 		}
 		m.cache[url.Code] = url
 	}
-	return urls, hasConflict, nil
+	return urls, hasConflicts, nil
 }
 
 func (m *MemoryStorage) Close() error {

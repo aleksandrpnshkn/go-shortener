@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -20,8 +22,6 @@ import (
 func TestCreateShortBatch(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
-	codePrefix := "tEsT"
 
 	user := users.User{
 		ID: 123,
@@ -54,10 +54,13 @@ func TestCreateShortBatch(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		codeGenerator := services.NewTestGenerator(codePrefix)
+		codesReserver := mocks.NewMockCodesReserver(ctrl)
+		codesReserver.EXPECT().GetCode(gomock.Any()).AnyTimes().Return(types.Code("tEsT1"), nil)
+
 		urlsStorage := urls.NewMemoryStorage()
 		shortener := services.NewShortener(
-			codeGenerator,
+			context.Background(),
+			codesReserver,
 			urlsStorage,
 			"http://localhost",
 		)

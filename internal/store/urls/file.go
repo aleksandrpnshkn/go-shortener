@@ -39,7 +39,7 @@ func (f *FileStorage) Set(ctx context.Context, url ShortenedURL, user *users.Use
 	return url, hasConflict, nil
 }
 
-func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
+func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
 	lines := [][]byte{}
 
 	for _, url := range urls {

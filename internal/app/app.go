@@ -17,6 +17,7 @@ import (
 )
 
 const codesLength = 8
+const reservedCodesCount = 30
 
 func Run(
 	ctx context.Context,
@@ -28,8 +29,18 @@ func Run(
 	router := chi.NewRouter()
 
 	codeGenerator := services.NewRandomCodeGenerator(codesLength)
-	shortener := services.NewShortener(
+
+	codesReserver := services.NewCodesReserver(
+		ctx,
+		logger,
 		codeGenerator,
+		urlsStorage,
+		reservedCodesCount,
+	)
+
+	shortener := services.NewShortener(
+		ctx,
+		codesReserver,
 		urlsStorage,
 		config.PublicBaseURL,
 	)

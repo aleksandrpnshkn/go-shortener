@@ -14,45 +14,45 @@ type ShortenedURL struct {
 }
 
 type Shortener struct {
-	codeGenerator CodeGenerator
+	codesReserver CodesReserver
 	urlsStorage   urls.Storage
 	baseURL       string
 }
 
 func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, user *users.User) (shortURL types.ShortURL, hasConflict bool, err error) {
-	const fakeCorrelationID = "fake_id"
-
-	shortURLs, hasConflict, err := s.ShortenMany(ctx, map[string]types.OriginalURL{fakeCorrelationID: originalURL}, user)
+	code, err := s.codesReserver.GetCode(ctx)
 	if err != nil {
-		return "", hasConflict, err
+		return shortURL, hasConflict, err
 	}
 
-	return shortURLs[fakeCorrelationID], hasConflict, nil
+	urlToStore := urls.ShortenedURL{
+		Code:        code,
+		OriginalURL: originalURL,
+	}
+
+	storedURL, hasConflict, err := s.urlsStorage.Set(ctx, urlToStore, user)
+	if err != nil {
+		return shortURL, hasConflict, err
+	}
+
+	shortURL = s.makeShortURL(storedURL.Code)
+
+	return shortURL, hasConflict, nil
 }
 
 func (s *Shortener) ShortenMany(
 	ctx context.Context,
 	originalURLs map[string]types.OriginalURL,
 	user *users.User,
-) (shortURLs map[string]types.ShortURL, hasConflict bool, err error) {
-	codesInBatch := make(map[types.Code]bool, len(originalURLs))
+) (shortURLs map[string]types.ShortURL, err error) {
 	urlsToStore := make(map[string]urls.ShortenedURL, len(originalURLs))
 	shortURLs = make(map[string]types.ShortURL, len(originalURLs))
 
 	for correlationID, url := range originalURLs {
-		var code types.Code
-		codeExistsInCurrentBatch := true
-		codeExistsInDatabase := true
-		for codeExistsInCurrentBatch || codeExistsInDatabase {
-			code = s.codeGenerator.Generate()
-
-			_, codeExistsInCurrentBatch = codesInBatch[code]
-
-			_, err = s.urlsStorage.Get(ctx, code)
-			codeExistsInDatabase = err == nil
+		code, err := s.codesReserver.GetCode(ctx)
+		if err != nil {
+			return shortURLs, err
 		}
-
-		codesInBatch[code] = true
 
 		urlsToStore[correlationID] = urls.ShortenedURL{
 			Code:        code,
@@ -60,16 +60,16 @@ func (s *Shortener) ShortenMany(
 		}
 	}
 
-	storedURLs, hasConflict, err := s.urlsStorage.SetMany(ctx, urlsToStore, user)
+	storedURLs, _, err := s.urlsStorage.SetMany(ctx, urlsToStore, user)
 	if err != nil {
-		return nil, hasConflict, err
+		return nil, err
 	}
 
 	for correlationID, url := range storedURLs {
 		shortURLs[correlationID] = s.makeShortURL(url.Code)
 	}
 
-	return shortURLs, hasConflict, nil
+	return shortURLs, nil
 }
 
 func (s *Shortener) GetUserURLs(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
@@ -95,14 +95,15 @@ func (s *Shortener) makeShortURL(code types.Code) types.ShortURL {
 }
 
 func NewShortener(
-	codeGenerator CodeGenerator,
+	ctx context.Context,
+	codesReserver CodesReserver,
 	urlsStorage urls.Storage,
 	baseURL string,
 ) *Shortener {
 	shortener := Shortener{
-		codeGenerator,
-		urlsStorage,
-		baseURL,
+		codesReserver: codesReserver,
+		urlsStorage:   urlsStorage,
+		baseURL:       baseURL,
 	}
 
 	return &shortener

@@ -22,4 +22,6 @@ mockgen -destination=internal/mocks/mock_services_auther.go -package=mocks ./int
 
 mockgen -destination=internal/mocks/mock_services_code_generator.go -package=mocks ./internal/services CodeGenerator
 
+mockgen -destination=internal/mocks/mock_services_codes_reserver.go -package=mocks ./internal/services CodesReserver
+
 echo "Finish"

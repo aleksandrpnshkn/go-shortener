@@ -9,6 +9,7 @@ import (
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/stretchr/testify/assert"
@@ -42,6 +43,7 @@ func TestGetUserURLs(t *testing.T) {
 			mocks.NewMockCodesReserver(ctrl),
 			urlsStorage,
 			"http://localhost",
+			audit.NewPublisher([]audit.Observer{}),
 		)
 
 		w := httptest.NewRecorder()
@@ -76,6 +78,7 @@ func TestGetUserURLs(t *testing.T) {
 			mocks.NewMockCodesReserver(ctrl),
 			urlsStorage,
 			"http://localhost",
+			audit.NewPublisher([]audit.Observer{}),
 		)
 
 		w := httptest.NewRecorder()

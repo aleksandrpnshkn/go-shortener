@@ -10,6 +10,7 @@ import (
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
@@ -63,6 +64,7 @@ func TestCreateShortBatch(t *testing.T) {
 			codesReserver,
 			urlsStorage,
 			"http://localhost",
+			audit.NewPublisher([]audit.Observer{}),
 		)
 
 		t.Run(test.testName, func(t *testing.T) {

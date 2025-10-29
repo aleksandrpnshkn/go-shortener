@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"time"
 
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
@@ -14,9 +16,10 @@ type ShortenedURL struct {
 }
 
 type Shortener struct {
-	codesReserver CodesReserver
-	urlsStorage   urls.Storage
-	baseURL       string
+	codesReserver      CodesReserver
+	urlsStorage        urls.Storage
+	baseURL            string
+	shortenedPublisher *audit.Publisher
 }
 
 func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, user *users.User) (shortURL types.ShortURL, hasConflict bool, err error) {
@@ -30,12 +33,19 @@ func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, 
 		OriginalURL: originalURL,
 	}
 
+	shortenedAt := time.Now()
 	storedURL, hasConflict, err := s.urlsStorage.Set(ctx, urlToStore, user)
 	if err != nil {
 		return shortURL, hasConflict, err
 	}
 
 	shortURL = s.makeShortURL(storedURL.Code)
+
+	s.shortenedPublisher.Notify(ctx, audit.NewShortenedEvent(
+		shortenedAt,
+		user,
+		originalURL,
+	))
 
 	return shortURL, hasConflict, nil
 }
@@ -60,12 +70,20 @@ func (s *Shortener) ShortenMany(
 		}
 	}
 
+	shortenedAt := time.Now()
+
 	storedURLs, _, err := s.urlsStorage.SetMany(ctx, urlsToStore, user)
 	if err != nil {
 		return nil, err
 	}
 
 	for correlationID, url := range storedURLs {
+		s.shortenedPublisher.Notify(ctx, audit.NewShortenedEvent(
+			shortenedAt,
+			user,
+			url.OriginalURL,
+		))
+
 		shortURLs[correlationID] = s.makeShortURL(url.Code)
 	}
 
@@ -99,11 +117,13 @@ func NewShortener(
 	codesReserver CodesReserver,
 	urlsStorage urls.Storage,
 	baseURL string,
+	shortenedPublisher *audit.Publisher,
 ) *Shortener {
 	shortener := Shortener{
-		codesReserver: codesReserver,
-		urlsStorage:   urlsStorage,
-		baseURL:       baseURL,
+		codesReserver:      codesReserver,
+		urlsStorage:        urlsStorage,
+		baseURL:            baseURL,
+		shortenedPublisher: shortenedPublisher,
 	}
 
 	return &shortener

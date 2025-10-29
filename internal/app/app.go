@@ -10,6 +10,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/middlewares"
 	"github.com/aleksandrpnshkn/go-shortener/internal/middlewares/compress"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/go-chi/chi/v5"
@@ -38,11 +39,26 @@ func Run(
 		reservedCodesCount,
 	)
 
+	observers := []audit.Observer{}
+
+	fileLogger, err := audit.NewFileLogger(config.Audit.File)
+	if err == nil {
+		defer fileLogger.Close()
+
+		fileObserver := audit.NewFileObserver(logger, fileLogger)
+		observers = append(observers, fileObserver)
+	} else {
+		logger.Error("failed to create audit file observer", zap.Error(err))
+	}
+
+	shortenedPublisher := audit.NewPublisher(observers)
+
 	shortener := services.NewShortener(
 		ctx,
 		codesReserver,
 		urlsStorage,
 		config.PublicBaseURL,
+		shortenedPublisher,
 	)
 
 	auther := services.NewAuther(usersStorage, config.AuthSecretKey)
@@ -69,7 +85,7 @@ func Run(
 
 	logger.Info("Running app...")
 
-	err := http.ListenAndServe(config.ServerAddr, router)
+	err = http.ListenAndServe(config.ServerAddr, router)
 
 	deleteUserUrlsWg.Wait()
 

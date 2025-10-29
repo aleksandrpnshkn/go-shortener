@@ -39,19 +39,23 @@ func Run(
 		reservedCodesCount,
 	)
 
-	observers := []audit.Observer{}
+	auditObservers := []audit.Observer{}
 
 	fileLogger, err := audit.NewFileLogger(config.Audit.File)
 	if err == nil {
 		defer fileLogger.Close()
 
 		fileObserver := audit.NewFileObserver(logger, fileLogger)
-		observers = append(observers, fileObserver)
+		auditObservers = append(auditObservers, fileObserver)
 	} else {
 		logger.Error("failed to create audit file observer", zap.Error(err))
 	}
 
-	shortenedPublisher := audit.NewPublisher(observers)
+	remoteLogger := audit.NewRemoteLogger(&http.Client{}, config.Audit.URL)
+	remoteObserver := audit.NewRemoteObserver(logger, remoteLogger)
+	auditObservers = append(auditObservers, remoteObserver)
+
+	shortenedPublisher := audit.NewPublisher(auditObservers)
 
 	shortener := services.NewShortener(
 		ctx,

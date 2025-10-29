@@ -2,7 +2,6 @@ package audit
 
 import (
 	"context"
-	"strconv"
 
 	"go.uber.org/zap"
 )
@@ -13,12 +12,7 @@ type FileObserver struct {
 }
 
 func (o *FileObserver) HandleEvent(ctx context.Context, event Event) {
-	entry := Entry{
-		TimeTs:      event.GetTime().Unix(),
-		Action:      event.GetName(),
-		UserID:      strconv.FormatInt(event.GetUserID(), 10),
-		OriginalURL: string(event.GetOriginalURL()),
-	}
+	entry := NewEntryFromAuditEvent(event)
 
 	err := o.fileLogger.AddEntry(ctx, entry)
 	if err != nil {

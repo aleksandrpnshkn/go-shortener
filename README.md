@@ -117,3 +117,10 @@ docker compose down --volumes
 # из корня проекта
 ./generate-mocks.bash
 ```
+
+Для тестирования сервиса аудита в докере настроен mockwire:
+```bash
+curl -X POST -i localhost:8082/api/audit-logs
+```
+При успехе будет вменяемый статус и имя совпавшего stub'а в заголовке.
+И можно чекнуть логи контейнера.

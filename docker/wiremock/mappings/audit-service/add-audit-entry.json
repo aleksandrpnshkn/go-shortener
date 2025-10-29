@@ -1,0 +1,10 @@
+{
+  "name": "add audit entry",
+  "request": {
+    "method": "POST",
+    "url": "/api/audit-logs"
+  },
+  "response": {
+    "status": 201
+  }
+}

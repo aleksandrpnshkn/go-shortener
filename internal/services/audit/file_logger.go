@@ -7,13 +7,6 @@ import (
 	"os"
 )
 
-type Entry struct {
-	TimeTs      int64  `json:"ts"`
-	Action      string `json:"action"`
-	UserID      string `json:"user_id"`
-	OriginalURL string `json:"url"`
-}
-
 type FileLogger struct {
 	file          *os.File
 	writer        *bufio.Writer

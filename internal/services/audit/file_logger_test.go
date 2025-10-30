@@ -17,7 +17,7 @@ func TestFileLogger(t *testing.T) {
 		require.NoError(t, err, "file logger should be created")
 
 		err = fileLogger.AddEntry(context.Background(), Entry{
-			TimeTs:      time.Unix(12345678, 0).Unix(),
+			TimeTS:      time.Unix(12345678, 0).Unix(),
 			Action:      "shorten",
 			UserID:      "12315134",
 			OriginalURL: "https://mylongdomain.com/my/long/path/to/shorten/",

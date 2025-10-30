@@ -65,6 +65,10 @@ func Run(
 		shortenedPublisher,
 	)
 
+	followedPublisher := audit.NewPublisher(auditObservers)
+
+	unshortener := services.NewUnshortener(urlsStorage, followedPublisher)
+
 	auther := services.NewAuther(usersStorage, config.AuthSecretKey)
 	deletionBatcher := services.NewDeletionBatcher(logger, urlsStorage)
 	defer deletionBatcher.Close()
@@ -76,7 +80,7 @@ func Run(
 	router.Use(compress.NewCompressMiddleware(logger))
 	router.Use(middlewares.NewAuthMiddleware(logger, auther))
 
-	router.Get("/{code}", handlers.GetURLByCode(urlsStorage))
+	router.Get("/{code}", handlers.GetURLByCode(auther, unshortener))
 	router.Post("/", handlers.CreateShortURLPlain(shortener, logger, auther))
 	router.Get("/", handlers.FallbackHandler())
 

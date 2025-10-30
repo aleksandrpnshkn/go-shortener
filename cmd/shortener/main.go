@@ -24,13 +24,19 @@ func main() {
 	}
 	defer logger.Sync()
 
-	storage, err := store.NewStorage(ctx, config.DatabaseDSN, config.FileStoragePath, logger)
+	urlsStorage, err := store.NewURLsStorage(ctx, config.DatabaseDSN, config.FileStoragePath, logger)
 	if err != nil {
 		logger.Fatal("failed to init app storage", zap.Error(err))
 	}
-	defer storage.Close()
+	defer urlsStorage.Close()
 
-	err = app.Run(ctx, config, logger, storage)
+	usersStorage, err := store.NewUsersStorage(ctx, config.DatabaseDSN, logger)
+	if err != nil {
+		logger.Fatal("failed to init users storage", zap.Error(err))
+	}
+	defer usersStorage.Close()
+
+	err = app.Run(ctx, config, logger, urlsStorage, usersStorage)
 	if err != nil {
 		logger.Fatal("failed to run app", zap.Error(err))
 	}

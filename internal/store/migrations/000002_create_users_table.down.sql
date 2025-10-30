@@ -1,0 +1,4 @@
+ALTER TABLE urls
+DROP user_id CASCADE;
+
+DROP TABLE IF EXISTS users;

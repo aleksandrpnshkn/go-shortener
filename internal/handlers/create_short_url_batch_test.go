@@ -7,15 +7,25 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 	"go.uber.org/zap"
 )
 
 func TestCreateShortBatch(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	codePrefix := "tEsT"
+
+	user := users.User{
+		ID: 123,
+	}
 
 	tests := []struct {
 		testName        string
@@ -45,7 +55,7 @@ func TestCreateShortBatch(t *testing.T) {
 
 	for _, test := range tests {
 		codeGenerator := services.NewTestGenerator(codePrefix)
-		urlsStorage := store.NewMemoryStorage()
+		urlsStorage := urls.NewMemoryStorage()
 		shortener := services.NewShortener(
 			codeGenerator,
 			urlsStorage,
@@ -53,11 +63,14 @@ func TestCreateShortBatch(t *testing.T) {
 		)
 
 		t.Run(test.testName, func(t *testing.T) {
+			auther := mocks.NewMockAuther(ctrl)
+			auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+
 			w := httptest.NewRecorder()
 			reqBody := strings.NewReader(test.requestRawBody)
 			req := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", reqBody)
 
-			CreateShortURLBatch(shortener, zap.NewExample())(w, req)
+			CreateShortURLBatch(shortener, zap.NewExample(), auther)(w, req)
 
 			res := w.Result()
 			assert.Equal(t, test.statusCode, res.StatusCode)

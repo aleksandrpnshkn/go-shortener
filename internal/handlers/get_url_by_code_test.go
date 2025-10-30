@@ -6,7 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,11 +16,15 @@ func TestGetURLByCode(t *testing.T) {
 	existedCode := "tEsT"
 	fullURL := "http://example.com"
 
-	urlsStorage := store.NewMemoryStorage()
-	urlsStorage.Set(context.Background(), store.ShortenedURL{
+	user := users.User{
+		ID: 123,
+	}
+
+	urlsStorage := urls.NewMemoryStorage()
+	urlsStorage.Set(context.Background(), urls.ShortenedURL{
 		Code:        existedCode,
 		OriginalURL: fullURL,
-	})
+	}, &user)
 
 	t.Run("existed short url", func(t *testing.T) {
 		w := httptest.NewRecorder()

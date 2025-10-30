@@ -19,13 +19,13 @@ func TestPingHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	t.Run("test successful ping", func(t *testing.T) {
-		storage := mocks.NewMockStorage(ctrl)
-		storage.EXPECT().Ping(context.Background()).Return(nil)
+		urlsStorage := mocks.NewMockURLsStorage(ctrl)
+		urlsStorage.EXPECT().Ping(context.Background()).Return(nil)
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/ping", nil)
 
-		PingHandler(context.Background(), storage, zap.NewExample())(w, req)
+		PingHandler(context.Background(), urlsStorage, zap.NewExample())(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()
@@ -36,13 +36,13 @@ func TestPingHandler(t *testing.T) {
 	})
 
 	t.Run("test failed ping", func(t *testing.T) {
-		storage := mocks.NewMockStorage(ctrl)
-		storage.EXPECT().Ping(context.Background()).Return(errors.New("something wrong"))
+		urlsStorage := mocks.NewMockURLsStorage(ctrl)
+		urlsStorage.EXPECT().Ping(context.Background()).Return(errors.New("something wrong"))
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/ping", nil)
 
-		PingHandler(context.Background(), storage, zap.NewExample())(w, req)
+		PingHandler(context.Background(), urlsStorage, zap.NewExample())(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()

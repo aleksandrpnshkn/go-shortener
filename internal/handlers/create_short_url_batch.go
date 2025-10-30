@@ -22,9 +22,17 @@ type shortURL struct {
 func CreateShortURLBatch(
 	shortener *services.Shortener,
 	logger *zap.Logger,
+	auther services.Auther,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "application/json")
+
+		user, err := auther.FromUserContext(req.Context())
+		if err != nil {
+			logger.Error("failed to get user", zap.Error(err))
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
 		rawRequestData, err := io.ReadAll(req.Body)
 		if err != nil {
@@ -51,7 +59,7 @@ func CreateShortURLBatch(
 			urls[url.CorrelationID] = services.OriginalURL(url.OriginalURL)
 		}
 
-		shortURLs, _, err := shortener.ShortenMany(req.Context(), urls)
+		shortURLs, _, err := shortener.ShortenMany(req.Context(), urls, user)
 		if err != nil {
 			logger.Error("failed to create short url", zap.Error(err))
 			writeInternalServerError(res)

@@ -12,6 +12,7 @@ import (
 func CreateShortURLPlain(
 	shortener *services.Shortener,
 	logger *zap.Logger,
+	auther services.Auther,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")
@@ -23,7 +24,14 @@ func CreateShortURLPlain(
 		}
 		defer req.Body.Close()
 
-		shortURL, hasConflict, err := shortener.Shorten(req.Context(), services.OriginalURL(url))
+		user, err := auther.FromUserContext(req.Context())
+		if err != nil {
+			logger.Error("failed to get user", zap.Error(err))
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		shortURL, hasConflict, err := shortener.Shorten(req.Context(), services.OriginalURL(url), user)
 		if err != nil {
 			logger.Error("failed to create plain short url", zap.Error(err))
 			res.WriteHeader(http.StatusInternalServerError)
@@ -51,6 +59,7 @@ type createShortURLResponse struct {
 func CreateShortURL(
 	shortener *services.Shortener,
 	logger *zap.Logger,
+	auther services.Auther,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "application/json")
@@ -74,7 +83,14 @@ func CreateShortURL(
 			return
 		}
 
-		shortURL, hasConflict, err := shortener.Shorten(req.Context(), services.OriginalURL(requestData.URL))
+		user, err := auther.FromUserContext(req.Context())
+		if err != nil {
+			logger.Error("failed to get user", zap.Error(err))
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		shortURL, hasConflict, err := shortener.Shorten(req.Context(), services.OriginalURL(requestData.URL), user)
 		if err != nil {
 			logger.Error("failed to create short url", zap.Error(err))
 			writeInternalServerError(res)

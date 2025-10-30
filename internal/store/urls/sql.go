@@ -1,10 +1,11 @@
-package store
+package urls
 
 import (
 	"context"
 	"database/sql"
 	"errors"
 
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -22,19 +23,19 @@ func (s *SQLStorage) Close() error {
 	return s.db.Close()
 }
 
-func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL) (storedURL ShortenedURL, hasConflict bool, err error) {
+func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error) {
 	const key = "k"
-	storedURLs, hasDuplicates, err := s.SetMany(ctx, map[string]ShortenedURL{key: url})
+	storedURLs, hasDuplicates, err := s.SetMany(ctx, map[string]ShortenedURL{key: url}, user)
 	if err != nil {
 		return url, hasDuplicates, err
 	}
 	return storedURLs[key], hasDuplicates, nil
 }
 
-func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
+func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
 	hasConflict = false
 
-	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO urls (code, original_url) VALUES ($1, $2)")
+	stmt, err := s.db.PrepareContext(ctx, "INSERT INTO urls (code, original_url, user_id) VALUES ($1, $2, $3)")
 	if err != nil {
 		return nil, hasConflict, err
 	}
@@ -48,7 +49,7 @@ func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL) 
 	storedURLs = make(map[string]ShortenedURL, len(urls))
 
 	for key, url := range urls {
-		_, err := stmt.ExecContext(ctx, url.Code, url.OriginalURL)
+		_, err := stmt.ExecContext(ctx, url.Code, url.OriginalURL, user.ID)
 		var pgerr *pgconn.PgError
 		if errors.As(err, &pgerr) && pgerr.Code == pgerrcode.UniqueViolation {
 			storedCode, err := s.getCode(ctx, url.OriginalURL)
@@ -82,6 +83,34 @@ func (s *SQLStorage) Get(ctx context.Context, code string) (originalURL string, 
 	}
 
 	return originalURL, nil
+}
+
+func (s *SQLStorage) GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
+	urls := []ShortenedURL{}
+
+	rows, err := s.db.QueryContext(ctx, "SELECT code, original_url FROM urls WHERE user_id = $1", user.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var shortenedURL ShortenedURL
+
+		err = rows.Scan(&shortenedURL.Code, &shortenedURL.OriginalURL)
+		if err != nil {
+			return nil, err
+		}
+
+		urls = append(urls, shortenedURL)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return urls, nil
 }
 
 func (s *SQLStorage) getCode(ctx context.Context, originalURL string) (code string, err error) {

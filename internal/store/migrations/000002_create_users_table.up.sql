@@ -3,6 +3,8 @@ CREATE TABLE users (
 );
 
 ALTER TABLE urls
+    ADD CONSTRAINT urls_id_pkey PRIMARY KEY (id),
     -- Внешний ключ сделать не получилось, автотест ломается из-за того что дропает таблицы без миграций
     -- https://github.com/Yandex-Practicum/go-autotests/blob/fc542b82d9614ff2f450835e059263f71ee9af92/cmd/wipedb/main.go#L48
-    ADD user_id BIGINT; 
+    ADD user_id BIGINT,
+    ADD is_deleted BOOLEAN DEFAULT false; 

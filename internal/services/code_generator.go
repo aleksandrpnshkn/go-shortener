@@ -3,6 +3,8 @@ package services
 import (
 	"math/rand"
 	"strconv"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
 var codeRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
@@ -16,18 +18,16 @@ func randStringRunes(n int) string {
 	return string(b)
 }
 
-type Code string
-
 type CodeGenerator interface {
-	Generate() Code
+	Generate() types.Code
 }
 
 type RandomCodeGenerator struct {
 	codeLength int
 }
 
-func (c *RandomCodeGenerator) Generate() Code {
-	return Code(randStringRunes(c.codeLength))
+func (c *RandomCodeGenerator) Generate() types.Code {
+	return types.Code(randStringRunes(c.codeLength))
 }
 
 func NewRandomCodeGenerator(codeLength int) CodeGenerator {
@@ -42,9 +42,9 @@ type TestCodeGenerator struct {
 	counter        int
 }
 
-func (c *TestCodeGenerator) Generate() Code {
+func (c *TestCodeGenerator) Generate() types.Code {
 	c.counter++
-	return Code(c.testCodePrefix + strconv.Itoa(c.counter))
+	return types.Code(c.testCodePrefix + strconv.Itoa(c.counter))
 }
 
 func NewTestGenerator(testCodePrefix string) CodeGenerator {

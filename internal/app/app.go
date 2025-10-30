@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"net/http"
+	"sync"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
 	"github.com/aleksandrpnshkn/go-shortener/internal/handlers"
@@ -16,6 +17,7 @@ import (
 )
 
 const codesLength = 8
+const reservedCodesCount = 30
 
 func Run(
 	ctx context.Context,
@@ -27,13 +29,27 @@ func Run(
 	router := chi.NewRouter()
 
 	codeGenerator := services.NewRandomCodeGenerator(codesLength)
-	shortener := services.NewShortener(
+
+	codesReserver := services.NewCodesReserver(
+		ctx,
+		logger,
 		codeGenerator,
+		urlsStorage,
+		reservedCodesCount,
+	)
+
+	shortener := services.NewShortener(
+		ctx,
+		codesReserver,
 		urlsStorage,
 		config.PublicBaseURL,
 	)
 
 	auther := services.NewAuther(usersStorage, config.AuthSecretKey)
+	deletionBatcher := services.NewDeletionBatcher(logger, urlsStorage)
+	defer deletionBatcher.Close()
+
+	var deleteUserUrlsWg sync.WaitGroup
 
 	router.Use(middlewares.NewLogMiddleware(logger))
 	router.Use(compress.NewDecompressMiddleware(logger))
@@ -47,10 +63,15 @@ func Run(
 	router.Post("/api/shorten", handlers.CreateShortURL(shortener, logger, auther))
 	router.Post("/api/shorten/batch", handlers.CreateShortURLBatch(shortener, logger, auther))
 	router.Get("/api/user/urls", handlers.GetUserURLs(shortener, logger, auther))
+	router.Delete("/api/user/urls", handlers.DeleteUserURLs(logger, auther, &deleteUserUrlsWg, deletionBatcher))
 
 	router.Get("/ping", handlers.PingHandler(ctx, urlsStorage, logger))
 
 	logger.Info("Running app...")
 
-	return http.ListenAndServe(config.ServerAddr, router)
+	err := http.ListenAndServe(config.ServerAddr, router)
+
+	deleteUserUrlsWg.Wait()
+
+	return err
 }

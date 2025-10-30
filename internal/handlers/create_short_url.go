@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +32,7 @@ func CreateShortURLPlain(
 			return
 		}
 
-		shortURL, hasConflict, err := shortener.Shorten(req.Context(), services.OriginalURL(url), user)
+		shortURL, hasConflict, err := shortener.Shorten(req.Context(), types.OriginalURL(url), user)
 		if err != nil {
 			logger.Error("failed to create plain short url", zap.Error(err))
 			res.WriteHeader(http.StatusInternalServerError)
@@ -90,7 +91,7 @@ func CreateShortURL(
 			return
 		}
 
-		shortURL, hasConflict, err := shortener.Shorten(req.Context(), services.OriginalURL(requestData.URL), user)
+		shortURL, hasConflict, err := shortener.Shorten(req.Context(), types.OriginalURL(requestData.URL), user)
 		if err != nil {
 			logger.Error("failed to create short url", zap.Error(err))
 			writeInternalServerError(res)

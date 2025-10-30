@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -37,7 +38,8 @@ func TestGetUserURLs(t *testing.T) {
 		urlsStorage := mocks.NewMockURLsStorage(ctrl)
 		urlsStorage.EXPECT().GetByUserID(gomock.Any(), &user).Return(userURLs, nil)
 		shortener := services.NewShortener(
-			mocks.NewMockCodeGenerator(ctrl),
+			context.Background(),
+			mocks.NewMockCodesReserver(ctrl),
 			urlsStorage,
 			"http://localhost",
 		)
@@ -70,7 +72,8 @@ func TestGetUserURLs(t *testing.T) {
 		urlsStorage.EXPECT().GetByUserID(gomock.Any(), &user).Return([]urls.ShortenedURL{}, nil)
 
 		shortener := services.NewShortener(
-			mocks.NewMockCodeGenerator(ctrl),
+			context.Background(),
+			mocks.NewMockCodesReserver(ctrl),
 			urlsStorage,
 			"http://localhost",
 		)

@@ -20,4 +20,8 @@ mockgen -destination=internal/mocks/mock_store_users_storage.go -package=mocks -
 
 mockgen -destination=internal/mocks/mock_services_auther.go -package=mocks ./internal/services Auther
 
+mockgen -destination=internal/mocks/mock_services_code_generator.go -package=mocks ./internal/services CodeGenerator
+
+mockgen -destination=internal/mocks/mock_services_codes_reserver.go -package=mocks ./internal/services CodesReserver
+
 echo "Finish"

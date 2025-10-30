@@ -8,22 +8,23 @@ import (
 	"os"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
 type FileStorage struct {
 	file    *os.File
 	scanner *bufio.Scanner
 	writer  *bufio.Writer
-	cache   map[string]string
+	cache   map[types.Code]ShortenedURL
 
 	lastID        int
 	lineSeparator rune
 }
 
 type ShortenedURLEntry struct {
-	UUID        int    `json:"uuid"`
-	ShortURL    string `json:"short_url"`
-	OriginalURL string `json:"original_url"`
+	UUID        int               `json:"uuid"`
+	Code        types.Code        `json:"short_url"`
+	OriginalURL types.OriginalURL `json:"original_url"`
 }
 
 func (f *FileStorage) Ping(ctx context.Context) error {
@@ -31,20 +32,20 @@ func (f *FileStorage) Ping(ctx context.Context) error {
 }
 
 func (f *FileStorage) Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error) {
-	_, hasConflict, err = f.SetMany(ctx, map[string]ShortenedURL{url.Code: url}, user)
+	_, hasConflict, err = f.SetMany(ctx, map[string]ShortenedURL{string(url.Code): url}, user)
 	if err != nil {
 		return url, hasConflict, err
 	}
 	return url, hasConflict, nil
 }
 
-func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflict bool, err error) {
+func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
 	lines := [][]byte{}
 
 	for _, url := range urls {
 		entry := ShortenedURLEntry{
 			UUID:        f.incrementID(),
-			ShortURL:    url.Code,
+			Code:        url.Code,
 			OriginalURL: url.OriginalURL,
 		}
 
@@ -62,22 +63,26 @@ func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL,
 	}
 
 	for _, url := range urls {
-		f.cache[url.Code] = url.OriginalURL
+		f.cache[url.Code] = url
 	}
 
 	return urls, false, nil
 }
 
-func (f *FileStorage) Get(ctx context.Context, code string) (originalURL string, err error) {
+func (f *FileStorage) Get(ctx context.Context, code types.Code) (ShortenedURL, error) {
 	value, ok := f.cache[code]
 	if !ok {
-		return "", ErrCodeNotFound
+		return ShortenedURL{}, ErrCodeNotFound
 	}
 	return value, nil
 }
 
 func (f *FileStorage) GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
 	return []ShortenedURL{}, nil
+}
+
+func (f *FileStorage) DeleteManyByUserID(ctx context.Context, commands []DeleteCode) error {
+	return nil
 }
 
 func (f *FileStorage) Close() error {
@@ -136,7 +141,11 @@ func (f *FileStorage) load() error {
 			return errors.New("bad key in file: " + err.Error())
 		}
 
-		f.cache[entry.ShortURL] = entry.OriginalURL
+		f.cache[entry.Code] = ShortenedURL{
+			OriginalURL: entry.OriginalURL,
+			Code:        entry.Code,
+			IsDeleted:   false,
+		}
 
 		if f.lastID < entry.UUID {
 			f.lastID = entry.UUID
@@ -156,7 +165,7 @@ func NewFileStorage(fileName string) (*FileStorage, error) {
 		file:    file,
 		scanner: scanner,
 		writer:  bufio.NewWriter(file),
-		cache:   map[string]string{},
+		cache:   map[types.Code]ShortenedURL{},
 
 		lastID:        0,
 		lineSeparator: '\n',

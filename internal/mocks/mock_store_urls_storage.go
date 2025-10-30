@@ -15,6 +15,7 @@ import (
 
 	urls "github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	users "github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	types "github.com/aleksandrpnshkn/go-shortener/internal/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -56,11 +57,25 @@ func (mr *MockURLsStorageMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockURLsStorage)(nil).Close))
 }
 
+// DeleteManyByUserID mocks base method.
+func (m *MockURLsStorage) DeleteManyByUserID(ctx context.Context, batch []urls.DeleteCode) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteManyByUserID", ctx, batch)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteManyByUserID indicates an expected call of DeleteManyByUserID.
+func (mr *MockURLsStorageMockRecorder) DeleteManyByUserID(ctx, batch any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteManyByUserID", reflect.TypeOf((*MockURLsStorage)(nil).DeleteManyByUserID), ctx, batch)
+}
+
 // Get mocks base method.
-func (m *MockURLsStorage) Get(ctx context.Context, code string) (string, error) {
+func (m *MockURLsStorage) Get(ctx context.Context, code types.Code) (urls.ShortenedURL, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, code)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(urls.ShortenedURL)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

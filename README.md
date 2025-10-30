@@ -40,21 +40,26 @@ source ~/.profile
 
 Запустить сервер:
 ```bash
-cd cmd/shortener
-
-go build -o shortener *.go \
-    && ./shortener
+go build -o cmd/shortener/shortener cmd/shortener/*go \
+    && ./cmd/shortener/shortener
 ```
 
 Запустить тест:
 ```bash
 # template
 # Параметры запуска итераций разные, можно чекнуть .github/workflows/metricstest.yml
-go build -o shortener *.go \
-    && shortenertest -test.v -test.run=^TestIteration1$ -binary-path=./shortener
+# Репозиторий - https://github.com/Yandex-Practicum/go-autotests , там инструкция как запустить
+go build -o cmd/shortener/shortener cmd/shortener/*go \
+    && shortenertest -test.v -test.run=^TestIteration1$ -binary-path=./cmd/shortener/shortener
+
+go build -o cmd/shortener/shortener cmd/shortener/*go \
+    && shortenertestbeta -test.v -test.run=^TestIteration15$ \
+        -binary-path=cmd/shortener/shortener \
+        -database-dsn="postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable"
+    wipedb "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable"
 
 # Мои тесты (count для отключения кэша, помогает отлавливать flaky-тесты)
-go test -count=1 ./...
+go test -count=100 ./...
 ```
 
 Работа с URLом:
@@ -69,9 +74,18 @@ curl -X POST -H "Content-Type: application/json" --cookie "auth_token=TOKEN" -d 
 # список урлов юзера
 curl -H "Content-Type: application/json" --cookie "auth_token=TOKEN" -i localhost:8080/api/user/urls
 
+curl -X DELETE -H "Content-Type: application/json" --cookie "auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOjF9.ZFQYhAk2o2DDE7PMJJcYHRgb74kcYvc-oSQ9J63elnQ" -d '["mB79DTY4", "KEvfvHAz", "kekich"]' --compressed -i localhost:8080/api/user/urls
+
 curl -X POST -H "Content-Type: application/json" -d '[{"correlation_id": "c1", "original_url": "https://practicum.yandex.ru/"}, {"correlation_id": "c2", "original_url": "https://practicum.yandex.ru/test"}]' --compressed -i localhost:8080/api/shorten/batch
 
 curl -i localhost:8080/EwHXdJfB
+
+
+# удаление с нагрузкой
+docker run -it --rm --net=host alpine/bombardier --method=DELETE --header="Content-Type: application/json" --header="Cookie: auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOjF9.ZFQYhAk2o2DDE7PMJJcYHRgb74kcYvc-oSQ9J63elnQ" --body='["mB79DTY4", "KEvfvHAz", "kekich"]' --connections=30 --rate=100 --requests=300 http://localhost:8080/api/user/urls
+
+# создание с нагрузкой
+docker run -it --rm --net=host alpine/bombardier --method=POST --body='http://example.org/' --connections=50 --rate=800 --requests=3000 http://localhost:8080/
 ```
 
 Окружение:

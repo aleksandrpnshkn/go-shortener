@@ -8,13 +8,14 @@ import (
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetURLByCode(t *testing.T) {
-	existedCode := "tEsT"
-	fullURL := "http://example.com"
+	existedCode := types.Code("tEsT")
+	fullURL := types.OriginalURL("http://example.com")
 
 	user := users.User{
 		ID: 123,
@@ -28,8 +29,8 @@ func TestGetURLByCode(t *testing.T) {
 
 	t.Run("existed short url", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/"+existedCode, nil)
-		req.SetPathValue("code", existedCode)
+		req := httptest.NewRequest(http.MethodGet, "/"+string(existedCode), nil)
+		req.SetPathValue("code", string(existedCode))
 
 		GetURLByCode(urlsStorage)(w, req)
 
@@ -39,7 +40,7 @@ func TestGetURLByCode(t *testing.T) {
 
 		assert.Equal(t, http.StatusTemporaryRedirect, res.StatusCode, "has redirect")
 		assert.Equal(t, "text/plain", res.Header.Get("Content-Type"))
-		assert.Equal(t, fullURL, res.Header.Get("Location"), "redirects to original url")
+		assert.Equal(t, string(fullURL), res.Header.Get("Location"), "redirects to original url")
 	})
 
 	t.Run("unknown short url", func(t *testing.T) {

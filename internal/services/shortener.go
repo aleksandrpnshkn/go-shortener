@@ -5,74 +5,71 @@ import (
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
-type OriginalURL string
-
-type ShortURL string
-
 type ShortenedURL struct {
-	OriginalURL OriginalURL
-	ShortURL    ShortURL
+	OriginalURL types.OriginalURL
+	ShortURL    types.ShortURL
 }
 
 type Shortener struct {
-	codeGenerator CodeGenerator
+	codesReserver CodesReserver
 	urlsStorage   urls.Storage
 	baseURL       string
 }
 
-func (s *Shortener) Shorten(ctx context.Context, originalURL OriginalURL, user *users.User) (shortURL ShortURL, hasConflict bool, err error) {
-	const fakeCorrelationID = "fake_id"
-
-	shortURLs, hasConflict, err := s.ShortenMany(ctx, map[string]OriginalURL{fakeCorrelationID: originalURL}, user)
+func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, user *users.User) (shortURL types.ShortURL, hasConflict bool, err error) {
+	code, err := s.codesReserver.GetCode(ctx)
 	if err != nil {
-		return "", hasConflict, err
+		return shortURL, hasConflict, err
 	}
 
-	return shortURLs[fakeCorrelationID], hasConflict, nil
+	urlToStore := urls.ShortenedURL{
+		Code:        code,
+		OriginalURL: originalURL,
+	}
+
+	storedURL, hasConflict, err := s.urlsStorage.Set(ctx, urlToStore, user)
+	if err != nil {
+		return shortURL, hasConflict, err
+	}
+
+	shortURL = s.makeShortURL(storedURL.Code)
+
+	return shortURL, hasConflict, nil
 }
 
 func (s *Shortener) ShortenMany(
 	ctx context.Context,
-	originalURLs map[string]OriginalURL,
+	originalURLs map[string]types.OriginalURL,
 	user *users.User,
-) (shortURLs map[string]ShortURL, hasConflict bool, err error) {
-	codesInBatch := make(map[Code]bool, len(originalURLs))
+) (shortURLs map[string]types.ShortURL, err error) {
 	urlsToStore := make(map[string]urls.ShortenedURL, len(originalURLs))
-	shortURLs = make(map[string]ShortURL, len(originalURLs))
+	shortURLs = make(map[string]types.ShortURL, len(originalURLs))
 
 	for correlationID, url := range originalURLs {
-		var code Code
-		codeExistsInCurrentBatch := true
-		codeExistsInDatabase := true
-		for codeExistsInCurrentBatch || codeExistsInDatabase {
-			code = s.codeGenerator.Generate()
-
-			_, codeExistsInCurrentBatch = codesInBatch[code]
-
-			_, err = s.urlsStorage.Get(ctx, string(code))
-			codeExistsInDatabase = err == nil
+		code, err := s.codesReserver.GetCode(ctx)
+		if err != nil {
+			return shortURLs, err
 		}
 
-		codesInBatch[code] = true
-
 		urlsToStore[correlationID] = urls.ShortenedURL{
-			Code:        string(code),
-			OriginalURL: string(url),
+			Code:        code,
+			OriginalURL: url,
 		}
 	}
 
-	storedURLs, hasConflict, err := s.urlsStorage.SetMany(ctx, urlsToStore, user)
+	storedURLs, _, err := s.urlsStorage.SetMany(ctx, urlsToStore, user)
 	if err != nil {
-		return nil, hasConflict, err
+		return nil, err
 	}
 
 	for correlationID, url := range storedURLs {
 		shortURLs[correlationID] = s.makeShortURL(url.Code)
 	}
 
-	return shortURLs, hasConflict, nil
+	return shortURLs, nil
 }
 
 func (s *Shortener) GetUserURLs(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
@@ -86,26 +83,27 @@ func (s *Shortener) GetUserURLs(ctx context.Context, user *users.User) ([]Shorte
 	for _, url := range userURLs {
 		result = append(result, ShortenedURL{
 			ShortURL:    s.makeShortURL(url.Code),
-			OriginalURL: OriginalURL(url.OriginalURL),
+			OriginalURL: types.OriginalURL(url.OriginalURL),
 		})
 	}
 
 	return result, nil
 }
 
-func (s *Shortener) makeShortURL(code string) ShortURL {
-	return ShortURL(s.baseURL + "/" + code)
+func (s *Shortener) makeShortURL(code types.Code) types.ShortURL {
+	return types.ShortURL(s.baseURL + "/" + string(code))
 }
 
 func NewShortener(
-	codeGenerator CodeGenerator,
+	ctx context.Context,
+	codesReserver CodesReserver,
 	urlsStorage urls.Storage,
 	baseURL string,
 ) *Shortener {
 	shortener := Shortener{
-		codeGenerator,
-		urlsStorage,
-		baseURL,
+		codesReserver: codesReserver,
+		urlsStorage:   urlsStorage,
+		baseURL:       baseURL,
 	}
 
 	return &shortener

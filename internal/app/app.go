@@ -10,6 +10,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/middlewares"
 	"github.com/aleksandrpnshkn/go-shortener/internal/middlewares/compress"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/go-chi/chi/v5"
@@ -38,12 +39,38 @@ func Run(
 		reservedCodesCount,
 	)
 
+	auditObservers := []audit.Observer{}
+
+	fileLogger, err := audit.NewFileLogger(config.Audit.File)
+	if err == nil {
+		defer fileLogger.Close()
+
+		ch := make(chan audit.Event, 300)
+		defer close(ch)
+
+		fileObserver := audit.NewFileObserver(ctx, logger, fileLogger, ch)
+		auditObservers = append(auditObservers, fileObserver)
+	} else {
+		logger.Error("failed to create audit file observer", zap.Error(err))
+	}
+
+	remoteLogger := audit.NewRemoteLogger(&http.Client{}, config.Audit.URL)
+	remoteObserver := audit.NewRemoteObserver(logger, remoteLogger)
+	auditObservers = append(auditObservers, remoteObserver)
+
+	shortenedPublisher := audit.NewPublisher(auditObservers)
+
 	shortener := services.NewShortener(
 		ctx,
 		codesReserver,
 		urlsStorage,
 		config.PublicBaseURL,
+		shortenedPublisher,
 	)
+
+	followedPublisher := audit.NewPublisher(auditObservers)
+
+	unshortener := services.NewUnshortener(urlsStorage, followedPublisher)
 
 	auther := services.NewAuther(usersStorage, config.AuthSecretKey)
 	deletionBatcher := services.NewDeletionBatcher(logger, urlsStorage)
@@ -56,7 +83,7 @@ func Run(
 	router.Use(compress.NewCompressMiddleware(logger))
 	router.Use(middlewares.NewAuthMiddleware(logger, auther))
 
-	router.Get("/{code}", handlers.GetURLByCode(urlsStorage))
+	router.Get("/{code}", handlers.GetURLByCode(auther, unshortener))
 	router.Post("/", handlers.CreateShortURLPlain(shortener, logger, auther))
 	router.Get("/", handlers.FallbackHandler())
 
@@ -69,7 +96,7 @@ func Run(
 
 	logger.Info("Running app...")
 
-	err := http.ListenAndServe(config.ServerAddr, router)
+	err = http.ListenAndServe(config.ServerAddr, router)
 
 	deleteUserUrlsWg.Wait()
 

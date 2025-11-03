@@ -53,7 +53,7 @@ loop:
 	if len(commands) > 0 {
 		q.logger.Info("running deletion batch...", zap.Int("commands_size", len(commands)))
 		err := q.urlsStorage.DeleteManyByUserID(ctx, commands)
-		if (err != nil) {
+		if err != nil {
 			q.logger.Error("error occurred during deletion", zap.Error(err))
 		}
 	}

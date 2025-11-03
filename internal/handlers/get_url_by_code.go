@@ -1,28 +1,33 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
-func GetURLByCode(urlsStorage urls.Storage) http.HandlerFunc {
+func GetURLByCode(auther services.Auther, unshortener *services.Unshortener) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")
 
-		url, err := urlsStorage.Get(req.Context(), types.Code(req.PathValue("code")))
+		// nil в юзере это гость. Это ок
+		user, _ := auther.FromUserContext(req.Context())
+
+		code := types.Code(req.PathValue("code"))
+		originalURL, err := unshortener.Unshorten(req.Context(), code, user)
 		if err != nil {
+			if errors.Is(err, services.ErrShortURLWasDeleted) {
+				res.WriteHeader(http.StatusGone)
+				return
+			}
+
 			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		if url.IsDeleted {
-			res.WriteHeader(http.StatusGone)
-			return
-		}
-
-		res.Header().Add("Location", string(url.OriginalURL))
+		res.Header().Add("Location", string(originalURL))
 		res.WriteHeader(http.StatusTemporaryRedirect)
 	}
 }

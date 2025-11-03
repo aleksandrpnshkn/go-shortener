@@ -26,7 +26,7 @@ func TestAuthMiddleware(t *testing.T) {
 	t.Run("client sent valid token", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
 		auther.EXPECT().ParseToken(gomock.Any(), testToken).Return(&testUser, nil)
-		handler := NewAuthMiddleware(zap.NewExample(), auther)(testOkHandler())
+		handler := NewAuthMiddleware(zap.NewExample(), auther, true)(testOkHandler())
 
 		srv := httptest.NewServer(handler)
 		defer srv.Close()
@@ -44,7 +44,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 	t.Run("client sent invalid token", func(t *testing.T) {
 		auther := services.NewAuther(mocks.NewMockUsersStorage(ctrl), "secretkey")
-		handler := NewAuthMiddleware(zap.NewExample(), auther)(testOkHandler())
+		handler := NewAuthMiddleware(zap.NewExample(), auther, true)(testOkHandler())
 
 		srv := httptest.NewServer(handler)
 		defer srv.Close()
@@ -63,7 +63,7 @@ func TestAuthMiddleware(t *testing.T) {
 	t.Run("client not sent token", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
 		auther.EXPECT().RegisterUser(gomock.Any()).Return(&testUser, "testToken", nil)
-		handler := NewAuthMiddleware(zap.NewExample(), auther)(testOkHandler())
+		handler := NewAuthMiddleware(zap.NewExample(), auther, true)(testOkHandler())
 
 		srv := httptest.NewServer(handler)
 		defer srv.Close()

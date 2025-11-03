@@ -10,7 +10,11 @@ import (
 
 const authCookieName = "auth_token"
 
-func NewAuthMiddleware(logger *zap.Logger, auther services.Auther) func(http.Handler) http.Handler {
+func NewAuthMiddleware(
+	logger *zap.Logger,
+	auther services.Auther,
+	enableRegistration bool,
+) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 			ctx := req.Context()
@@ -26,22 +30,24 @@ func NewAuthMiddleware(logger *zap.Logger, auther services.Auther) func(http.Han
 			var user *users.User
 
 			if err == http.ErrNoCookie {
-				user, token, err = auther.RegisterUser(ctx)
-				if err != nil {
-					logger.Error("failed to register new user", zap.Error(err))
-					res.WriteHeader(http.StatusInternalServerError)
-					return
-				}
+				if enableRegistration {
+					user, token, err = auther.RegisterUser(ctx)
+					if err != nil {
+						logger.Error("failed to register new user", zap.Error(err))
+						res.WriteHeader(http.StatusInternalServerError)
+						return
+					}
 
-				authCookie = &http.Cookie{
-					Name:  authCookieName,
-					Value: token,
+					authCookie = &http.Cookie{
+						Name:  authCookieName,
+						Value: token,
 
-					HttpOnly: true,
-					SameSite: http.SameSiteStrictMode,
-					Secure:   false,
+						HttpOnly: true,
+						SameSite: http.SameSiteStrictMode,
+						Secure:   false,
+					}
+					http.SetCookie(res, authCookie)
 				}
-				http.SetCookie(res, authCookie)
 			} else {
 				user, err = auther.ParseToken(ctx, authCookie.Value)
 				if err != nil {

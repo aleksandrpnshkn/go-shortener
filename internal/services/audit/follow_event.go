@@ -22,6 +22,10 @@ func (e *FollowEvent) GetName() string {
 }
 
 func (e *FollowEvent) GetUserID() int64 {
+	if e.user == nil {
+		return 0
+	}
+
 	return e.user.ID
 }
 

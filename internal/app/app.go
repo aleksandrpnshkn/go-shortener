@@ -83,12 +83,16 @@ func Run(
 	router.Use(compress.NewDecompressMiddleware(logger))
 	router.Use(compress.NewCompressMiddleware(logger))
 
-	router.Get("/{code}", handlers.GetURLByCode(auther, unshortener))
-
 	router.Get("/ping", handlers.PingHandler(ctx, urlsStorage, logger))
 
+	// only login
 	router.Group(func(router chi.Router) {
-		router.Use(middlewares.NewAuthMiddleware(logger, auther))
+		router.Get("/{code}", handlers.GetURLByCode(auther, unshortener))
+	})
+
+	// login or register
+	router.Group(func(router chi.Router) {
+		router.Use(middlewares.NewAuthMiddleware(logger, auther, true))
 
 		router.Post("/", handlers.CreateShortURLPlain(shortener, logger, auther))
 		router.Get("/", handlers.FallbackHandler())

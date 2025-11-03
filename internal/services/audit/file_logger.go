@@ -26,6 +26,7 @@ func (f *FileLogger) AddEntries(ctx context.Context, entries []Entry) error {
 			return err
 		}
 
+		line = append(line, byte(f.lineSeparator))
 		lines = append(lines, line)
 	}
 
@@ -38,6 +39,11 @@ func (f *FileLogger) AddEntries(ctx context.Context, entries []Entry) error {
 }
 
 func (f *FileLogger) Close() error {
+	err := f.writer.Flush()
+	if err != nil {
+		return err
+	}
+
 	return f.file.Close()
 }
 
@@ -47,14 +53,9 @@ func (f *FileLogger) writeLines(lines [][]byte) error {
 		if err != nil {
 			return err
 		}
-
-		_, err = f.writer.WriteRune(f.lineSeparator)
-		if err != nil {
-			return err
-		}
 	}
 
-	return f.writer.Flush()
+	return nil
 }
 
 func NewFileLogger(fileName string) (*FileLogger, error) {

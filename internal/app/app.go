@@ -55,9 +55,11 @@ func Run(
 		logger.Error("failed to create audit file observer", zap.Error(err))
 	}
 
-	remoteLogger := audit.NewRemoteLogger(&http.Client{}, config.Audit.URL)
-	remoteObserver := audit.NewRemoteObserver(logger, remoteLogger)
-	auditObservers = append(auditObservers, remoteObserver)
+	if config.Audit.URL != "" {
+		remoteLogger := audit.NewRemoteLogger(&http.Client{}, config.Audit.URL)
+		remoteObserver := audit.NewRemoteObserver(logger, remoteLogger)
+		auditObservers = append(auditObservers, remoteObserver)
+	}
 
 	shortenedPublisher := audit.NewPublisher(auditObservers)
 

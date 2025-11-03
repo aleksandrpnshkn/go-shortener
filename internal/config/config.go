@@ -40,8 +40,8 @@ func New() *Config {
 		AuthSecretKey:   "changeme",
 		EnablePprof:     true,
 		Audit: AuditConfig{
-			File: "audit.log",
-			URL:  "http://localhost:8082/api/audit-logs",
+			File: "",
+			URL:  "",
 		},
 	}
 

@@ -41,7 +41,10 @@ source ~/.profile
 Запустить сервер:
 ```bash
 go build -o cmd/shortener/shortener cmd/shortener/*go \
-    && ./cmd/shortener/shortener --enable-pprof=1
+    && ./cmd/shortener/shortener \
+        --enable-pprof=1 \
+        --audit-file=audit.log \
+        --audit-url=http://localhost:8082/api/audit-logs
 ```
 
 Запустить тест:

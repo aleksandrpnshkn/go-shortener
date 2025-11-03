@@ -17,7 +17,7 @@ func DeleteUserURLs(
 	logger *zap.Logger,
 	auther services.Auther,
 	deleteWg *sync.WaitGroup,
-	deletionBatcher *services.DeletionBatcher,
+	deletionBatcher *services.Batcher,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "application/json")
@@ -51,7 +51,12 @@ func DeleteUserURLs(
 			defer cancel()
 
 			for _, code := range codes {
-				deletionBatcher.AddCode(ctx, code, *user)
+				deleteCodeCommand := services.DeleteCode{
+					Code: code,
+					User: *user,
+				}
+
+				deletionBatcher.Add(ctx, deleteCodeCommand)
 			}
 		}()
 

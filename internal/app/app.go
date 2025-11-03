@@ -74,7 +74,7 @@ func Run(
 	unshortener := services.NewUnshortener(urlsStorage, followedPublisher)
 
 	auther := services.NewAuther(usersStorage, config.AuthSecretKey)
-	deletionBatcher := services.NewDeletionBatcher(logger, urlsStorage)
+	deletionBatcher := services.NewDeletionBatcher(ctx, logger, urlsStorage)
 	defer deletionBatcher.Close()
 
 	var deleteUserUrlsWg sync.WaitGroup

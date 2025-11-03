@@ -41,7 +41,7 @@ source ~/.profile
 Запустить сервер:
 ```bash
 go build -o cmd/shortener/shortener cmd/shortener/*go \
-    && ./cmd/shortener/shortener
+    && ./cmd/shortener/shortener --enable-pprof=1
 ```
 
 Запустить тест:
@@ -124,3 +124,59 @@ curl -X POST -i localhost:8082/api/audit-logs
 ```
 При успехе будет вменяемый статус и имя совпавшего stub'а в заголовке.
 И можно чекнуть логи контейнера.
+
+## Профилирование 
+
+Профилирую два базовых сценария. Они основные для сервиса, и в них есть новый аудит, который следовало бы оптимизировать.
+
+Для начала подготовить тестовые данные:
+```bash
+psql --host 127.0.0.1 --port 5432 --username admin --password --dbname shortener --file ./dev-tools/wrk/data.sql
+# при успехе напишет INSERT 0 1
+```
+
+Для нагрузки использовать https://github.com/wg/wrk
+```bash
+wrk --threads=2 --timeout=1s --connections=4 --duration=1m --script=./dev-tools/wrk/pprof-load.lua http://localhost:8080
+```
+
+Параллельно нагрузке запустить сбор профиля:
+```bash
+# снять профиль памяти
+curl http://localhost:8080/debug/pprof/heap?seconds=30 > profiles/base.pprof
+
+# снять профиль CPU
+curl http://localhost:8080/debug/pprof/profile?seconds=30 > profiles/base-cpu.pprof
+
+# посмотреть в CLI
+go tool pprof profiles/base.pprof
+# посмотреть в браузере
+go tool pprof -http=":9090" profiles/base.pprof
+```
+
+В топе вызовов различные системные функции:
+```
+File: shortener
+Build ID: 66b3a0482a5a23002986239f94699dabf6bf3bbe
+Type: inuse_space
+Time: 2025-11-04 01:12:04 +04
+Duration: 30.87s, Total samples = 2.02MB 
+Entering interactive mode (type "help" for commands, "o" for options)
+(pprof) top
+Showing nodes accounting for -2064.46kB, 100% of 2064.46kB total
+Showing top 10 nodes out of 42
+      flat  flat%   sum%        cum   cum%
+-1024.28kB 49.62% 49.62% -1024.28kB 49.62%  github.com/jackc/pgx/v5.(*Conn).getRows
+ -528.17kB 25.58% 75.20%  -528.17kB 25.58%  net/http.init.func15
+ -512.01kB 24.80%   100%  -512.01kB 24.80%  internal/poll.runtime_pollSetDeadline
+         0     0%   100% -1024.28kB 49.62%  github.com/aleksandrpnshkn/go-shortener/internal/app.Run.GetURLByCode.func5
+         0     0%   100% -1024.28kB 49.62%  github.com/aleksandrpnshkn/go-shortener/internal/app.Run.NewAuthMiddleware.func4.1
+         0     0%   100% -1024.28kB 49.62%  github.com/aleksandrpnshkn/go-shortener/internal/app.Run.NewCompressMiddleware.func3.1
+         0     0%   100% -1024.28kB 49.62%  github.com/aleksandrpnshkn/go-shortener/internal/app.Run.NewDecompressMiddleware.func2.1
+         0     0%   100% -1024.28kB 49.62%  github.com/aleksandrpnshkn/go-shortener/internal/app.Run.NewLogMiddleware.func1.1
+         0     0%   100% -1024.28kB 49.62%  github.com/aleksandrpnshkn/go-shortener/internal/services.(*Unshortener).Unshorten
+         0     0%   100% -1024.28kB 49.62%  github.com/aleksandrpnshkn/go-shortener/internal/store/urls.(*SQLStorage).Get
+```
+Само по себе наличие middleware в данном случае не смущает, потому что вроде как это вызвано тем, что код хендлеров обрабатывается внутри них. Но тут видно `app.Run.NewAuthMiddleware.func4.1`. Большая часть нагрузки была на чтение, и наличие тут этой миддлвари может указывать на ошибку - при редиректах эта миддлваря не должна работать, нету смысла регистрировать пользователя и сеттить куки там.
+
+Далее в `Flame graph` в вебе видно немалое потребление памяти у обработчика логов, который отправляет события во внешний сервис `audit.(*RemoteObserver).HandleEvent`. Учитывая что он сделан наивно, делает для каждого события отдельный POST-запрос, это выглядит как очевидное место для оптимизации

@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -14,6 +15,7 @@ type Config struct {
 	DatabaseDSN     string
 	AuthSecretKey   string
 	Audit           AuditConfig
+	EnablePprof     bool
 }
 
 type AuditConfig struct {
@@ -36,6 +38,7 @@ func New() *Config {
 		FileStoragePath: fileStoragePath,
 		DatabaseDSN:     "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable",
 		AuthSecretKey:   "changeme",
+		EnablePprof:     true,
 		Audit: AuditConfig{
 			File: "audit.log",
 			URL:  "http://localhost:8082/api/audit-logs",
@@ -49,6 +52,7 @@ func New() *Config {
 	flag.StringVar(&config.AuthSecretKey, "s", config.DatabaseDSN, "auth secret key for signing JWT tokens")
 	flag.StringVar(&config.Audit.File, "audit-file", config.Audit.File, "file path to store audit logs")
 	flag.StringVar(&config.Audit.URL, "audit-url", config.Audit.URL, "external service URL to store audit logs")
+	flag.BoolVar(&config.EnablePprof, "enable-pprof", config.EnablePprof, "enable pprof debug routes")
 
 	flag.Parse()
 
@@ -91,6 +95,15 @@ func New() *Config {
 	auditURL, ok := os.LookupEnv("AUDIT_URL")
 	if ok {
 		config.Audit.URL = auditURL
+	}
+
+	enablePprof, ok := os.LookupEnv("ENABLE_PPROF")
+	if ok {
+		enablePprofVar, err := strconv.ParseBool(enablePprof)
+		if err != nil {
+			enablePprofVar = false
+		}
+		config.EnablePprof = enablePprofVar
 	}
 
 	return &config

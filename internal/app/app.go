@@ -14,6 +14,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 )
 
@@ -94,7 +95,12 @@ func Run(
 
 	router.Get("/ping", handlers.PingHandler(ctx, urlsStorage, logger))
 
-	logger.Info("Running app...")
+	if config.EnablePprof {
+		logger.Info("enabling pprof routes...")
+		router.Mount("/debug", middleware.Profiler())
+	}
+
+	logger.Info("running app...")
 
 	err = http.ListenAndServe(config.ServerAddr, router)
 

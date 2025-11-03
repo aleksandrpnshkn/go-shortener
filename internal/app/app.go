@@ -82,18 +82,22 @@ func Run(
 	router.Use(middlewares.NewLogMiddleware(logger))
 	router.Use(compress.NewDecompressMiddleware(logger))
 	router.Use(compress.NewCompressMiddleware(logger))
-	router.Use(middlewares.NewAuthMiddleware(logger, auther))
 
 	router.Get("/{code}", handlers.GetURLByCode(auther, unshortener))
-	router.Post("/", handlers.CreateShortURLPlain(shortener, logger, auther))
-	router.Get("/", handlers.FallbackHandler())
-
-	router.Post("/api/shorten", handlers.CreateShortURL(shortener, logger, auther))
-	router.Post("/api/shorten/batch", handlers.CreateShortURLBatch(shortener, logger, auther))
-	router.Get("/api/user/urls", handlers.GetUserURLs(shortener, logger, auther))
-	router.Delete("/api/user/urls", handlers.DeleteUserURLs(logger, auther, &deleteUserUrlsWg, deletionBatcher))
 
 	router.Get("/ping", handlers.PingHandler(ctx, urlsStorage, logger))
+
+	router.Group(func(router chi.Router) {
+		router.Use(middlewares.NewAuthMiddleware(logger, auther))
+
+		router.Post("/", handlers.CreateShortURLPlain(shortener, logger, auther))
+		router.Get("/", handlers.FallbackHandler())
+
+		router.Post("/api/shorten", handlers.CreateShortURL(shortener, logger, auther))
+		router.Post("/api/shorten/batch", handlers.CreateShortURLBatch(shortener, logger, auther))
+		router.Get("/api/user/urls", handlers.GetUserURLs(shortener, logger, auther))
+		router.Delete("/api/user/urls", handlers.DeleteUserURLs(logger, auther, &deleteUserUrlsWg, deletionBatcher))
+	})
 
 	if config.EnablePprof {
 		logger.Info("enabling pprof routes...")

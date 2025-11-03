@@ -45,7 +45,10 @@ func Run(
 	if err == nil {
 		defer fileLogger.Close()
 
-		fileObserver := audit.NewFileObserver(logger, fileLogger)
+		ch := make(chan audit.Event, 300)
+		defer close(ch)
+
+		fileObserver := audit.NewFileObserver(ctx, logger, fileLogger, ch)
 		auditObservers = append(auditObservers, fileObserver)
 	} else {
 		logger.Error("failed to create audit file observer", zap.Error(err))

@@ -24,6 +24,9 @@ func TestFileLogger(t *testing.T) {
 		})
 		require.NoError(t, err, "should add entry to log")
 
+		err = fileLogger.Close()
+		require.NoError(t, err, "should close logger")
+
 		rawLogs, err := os.ReadFile(testFileName)
 		require.NoError(t, err, "should read logs")
 		assert.Equal(

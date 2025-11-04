@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"net/http"
-	"sync"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
 	"github.com/aleksandrpnshkn/go-shortener/internal/handlers"
@@ -79,8 +78,6 @@ func Run(
 	deletionBatcher := services.NewDeletionBatcher(ctx, logger, urlsStorage)
 	defer deletionBatcher.Close()
 
-	var deleteUserUrlsWg sync.WaitGroup
-
 	router.Use(middlewares.NewLogMiddleware(logger))
 	router.Use(compress.NewDecompressMiddleware(logger))
 	router.Use(compress.NewCompressMiddleware(logger))
@@ -102,7 +99,7 @@ func Run(
 		router.Post("/api/shorten", handlers.CreateShortURL(shortener, logger, auther))
 		router.Post("/api/shorten/batch", handlers.CreateShortURLBatch(shortener, logger, auther))
 		router.Get("/api/user/urls", handlers.GetUserURLs(shortener, logger, auther))
-		router.Delete("/api/user/urls", handlers.DeleteUserURLs(logger, auther, &deleteUserUrlsWg, deletionBatcher))
+		router.Delete("/api/user/urls", handlers.DeleteUserURLs(logger, auther, deletionBatcher))
 	})
 
 	if config.EnablePprof {
@@ -113,8 +110,6 @@ func Run(
 	logger.Info("running app...")
 
 	err = http.ListenAndServe(config.ServerAddr, router)
-
-	deleteUserUrlsWg.Wait()
 
 	return err
 }

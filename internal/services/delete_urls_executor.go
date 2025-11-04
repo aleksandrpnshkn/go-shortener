@@ -53,8 +53,8 @@ func NewDeletionBatcher(
 		urlsStorage: urlsStorage,
 	}
 
-	batchSize := 200
-	batchDelay := 1 * time.Second
+	batchSize := 100
+	batchDelay := 200 * time.Millisecond
 
 	q := NewBatcher(ctx, logger, deleteURLsExecutor, batchSize, batchDelay)
 

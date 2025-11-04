@@ -4,6 +4,10 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"go.uber.org/zap"
+
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
 	"github.com/aleksandrpnshkn/go-shortener/internal/handlers"
 	"github.com/aleksandrpnshkn/go-shortener/internal/middlewares"
@@ -12,9 +16,6 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"go.uber.org/zap"
 )
 
 const codesLength = 8

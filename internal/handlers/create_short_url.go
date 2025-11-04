@@ -5,9 +5,10 @@ import (
 	"io"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
-	"go.uber.org/zap"
 )
 
 func CreateShortURLPlain(

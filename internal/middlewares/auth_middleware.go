@@ -3,9 +3,10 @@ package middlewares
 import (
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
-	"go.uber.org/zap"
 )
 
 const authCookieName = "auth_token"

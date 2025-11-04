@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/services/batcher"
 	"go.uber.org/zap"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/batcher"
 )
 
 type EntriesBatcher interface {

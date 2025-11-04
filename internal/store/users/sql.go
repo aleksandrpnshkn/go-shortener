@@ -5,9 +5,10 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
 type SQLStorage struct {

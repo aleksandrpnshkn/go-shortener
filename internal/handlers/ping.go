@@ -4,8 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"go.uber.org/zap"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 )
 
 func PingHandler(

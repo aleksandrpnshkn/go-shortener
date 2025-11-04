@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"go.uber.org/zap"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 )
 
 type shortenedURL struct {

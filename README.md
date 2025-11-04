@@ -128,6 +128,13 @@ curl -X POST -i localhost:8082/api/audit-logs
 При успехе будет вменяемый статус и имя совпавшего stub'а в заголовке.
 И можно чекнуть логи контейнера.
 
+## Форматирование
+
+```bash
+go install golang.org/x/tools/cmd/goimports@latest
+goimports -local "github.com/aleksandrpnshkn/go-shortener" -w ./..
+```
+
 ## Профилирование 
 
 Профилирую два базовых сценария. Они основные для сервиса, и в них есть новый аудит, который следовало бы оптимизировать.

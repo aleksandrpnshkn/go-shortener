@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/golang-jwt/jwt/v4"
+
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
-	"github.com/golang-jwt/jwt/v4"
 )
 
 type Claims struct {

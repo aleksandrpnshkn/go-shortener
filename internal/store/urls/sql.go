@@ -121,7 +121,9 @@ func (s *SQLStorage) GetByUserID(ctx context.Context, user *users.User) ([]Short
 }
 
 func (s *SQLStorage) DeleteManyByUserID(ctx context.Context, commands []DeleteCode) error {
-	batch := pgx.Batch{}
+	batch := pgx.Batch{
+		QueuedQueries: make([]*pgx.QueuedQuery, 0, len(commands)),
+	}
 
 	for _, cmd := range commands {
 		batch.Queue("UPDATE urls SET is_deleted = true WHERE user_id = $1 AND code = $2", cmd.User.ID, cmd.Code)

@@ -28,7 +28,7 @@ func (e *DeleteURLsExecutor) Execute(
 	ctx context.Context,
 	params []BatchParam,
 ) error {
-	deleteCommands := []urls.DeleteCode{}
+	deleteCommands := make([]urls.DeleteCode, 0, len(params))
 
 	for _, param := range params {
 		deleteCode, ok := param.(DeleteCode)

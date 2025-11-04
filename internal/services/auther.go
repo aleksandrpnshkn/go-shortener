@@ -33,7 +33,7 @@ var (
 	ErrInvalidToken = errors.New("invalid token")
 )
 
-const ctxUserID ctxKey = "user_id"
+const ctxUser ctxKey = "user"
 
 func (a *JwtAuther) ParseToken(ctx context.Context, tokenString string) (*users.User, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
@@ -72,14 +72,9 @@ func (a *JwtAuther) RegisterUser(ctx context.Context) (*users.User, string, erro
 }
 
 func (a *JwtAuther) FromUserContext(ctx context.Context) (*users.User, error) {
-	userID, ok := ctx.Value(ctxUserID).(int64)
+	user, ok := ctx.Value(ctxUser).(*users.User)
 	if !ok {
-		return nil, errors.New("user id is not set")
-	}
-
-	user, err := a.usersStorage.Get(ctx, userID)
-	if err != nil {
-		return nil, err
+		return nil, errors.New("user is not set")
 	}
 
 	return user, nil
@@ -107,5 +102,5 @@ func NewAuther(usersStorage users.Storage, secretKey string) *JwtAuther {
 }
 
 func NewUserContext(ctx context.Context, user *users.User) context.Context {
-	return context.WithValue(ctx, ctxUserID, user.ID)
+	return context.WithValue(ctx, ctxUser, user)
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -13,6 +14,13 @@ type Config struct {
 	FileStoragePath string
 	DatabaseDSN     string
 	AuthSecretKey   string
+	Audit           AuditConfig
+	EnablePprof     bool
+}
+
+type AuditConfig struct {
+	File string
+	URL  string
 }
 
 func New() *Config {
@@ -30,6 +38,11 @@ func New() *Config {
 		FileStoragePath: fileStoragePath,
 		DatabaseDSN:     "postgres://admin:qwerty@localhost:5432/shortener?sslmode=disable",
 		AuthSecretKey:   "changeme",
+		EnablePprof:     true,
+		Audit: AuditConfig{
+			File: "",
+			URL:  "",
+		},
 	}
 
 	flag.StringVar(&config.ServerAddr, "a", config.ServerAddr, "net address host:port")
@@ -37,6 +50,9 @@ func New() *Config {
 	flag.StringVar(&config.FileStoragePath, "f", config.FileStoragePath, "file storage path")
 	flag.StringVar(&config.DatabaseDSN, "d", config.DatabaseDSN, "database DSN")
 	flag.StringVar(&config.AuthSecretKey, "s", config.DatabaseDSN, "auth secret key for signing JWT tokens")
+	flag.StringVar(&config.Audit.File, "audit-file", config.Audit.File, "file path to store audit logs")
+	flag.StringVar(&config.Audit.URL, "audit-url", config.Audit.URL, "external service URL to store audit logs")
+	flag.BoolVar(&config.EnablePprof, "enable-pprof", config.EnablePprof, "enable pprof debug routes")
 
 	flag.Parse()
 
@@ -69,6 +85,25 @@ func New() *Config {
 	authSecretKey, ok := os.LookupEnv("AUTH_SECRET_KEY")
 	if ok {
 		config.AuthSecretKey = authSecretKey
+	}
+
+	auditFile, ok := os.LookupEnv("AUDIT_FILE")
+	if ok {
+		config.Audit.File = auditFile
+	}
+
+	auditURL, ok := os.LookupEnv("AUDIT_URL")
+	if ok {
+		config.Audit.URL = auditURL
+	}
+
+	enablePprof, ok := os.LookupEnv("ENABLE_PPROF")
+	if ok {
+		enablePprofVar, err := strconv.ParseBool(enablePprof)
+		if err != nil {
+			enablePprofVar = false
+		}
+		config.EnablePprof = enablePprofVar
 	}
 
 	return &config

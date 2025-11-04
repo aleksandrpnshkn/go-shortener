@@ -9,6 +9,7 @@ import (
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/stretchr/testify/assert"
@@ -33,15 +34,16 @@ func TestGetUserURLs(t *testing.T) {
 		userURLs := []urls.ShortenedURL{testURL}
 
 		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+		auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
 
 		urlsStorage := mocks.NewMockURLsStorage(ctrl)
-		urlsStorage.EXPECT().GetByUserID(gomock.Any(), &user).Return(userURLs, nil)
+		urlsStorage.EXPECT().GetByUserID(gomock.Any(), user.ID).Return(userURLs, nil)
 		shortener := services.NewShortener(
 			context.Background(),
 			mocks.NewMockCodesReserver(ctrl),
 			urlsStorage,
 			"http://localhost",
+			audit.NewPublisher([]audit.Observer{}),
 		)
 
 		w := httptest.NewRecorder()
@@ -66,16 +68,17 @@ func TestGetUserURLs(t *testing.T) {
 
 	t.Run("user has no urls", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+		auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
 
 		urlsStorage := mocks.NewMockURLsStorage(ctrl)
-		urlsStorage.EXPECT().GetByUserID(gomock.Any(), &user).Return([]urls.ShortenedURL{}, nil)
+		urlsStorage.EXPECT().GetByUserID(gomock.Any(), user.ID).Return([]urls.ShortenedURL{}, nil)
 
 		shortener := services.NewShortener(
 			context.Background(),
 			mocks.NewMockCodesReserver(ctrl),
 			urlsStorage,
 			"http://localhost",
+			audit.NewPublisher([]audit.Observer{}),
 		)
 
 		w := httptest.NewRecorder()

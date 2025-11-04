@@ -7,7 +7,6 @@ import (
 	"errors"
 	"os"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
@@ -31,15 +30,15 @@ func (f *FileStorage) Ping(ctx context.Context) error {
 	return nil
 }
 
-func (f *FileStorage) Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error) {
-	_, hasConflict, err = f.SetMany(ctx, map[string]ShortenedURL{string(url.Code): url}, user)
+func (f *FileStorage) Set(ctx context.Context, url ShortenedURL, userID types.UserID) (storedURL ShortenedURL, hasConflict bool, err error) {
+	_, hasConflict, err = f.SetMany(ctx, map[string]ShortenedURL{string(url.Code): url}, userID)
 	if err != nil {
 		return url, hasConflict, err
 	}
 	return url, hasConflict, nil
 }
 
-func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
+func (f *FileStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, userID types.UserID) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
 	lines := [][]byte{}
 
 	for _, url := range urls {
@@ -77,7 +76,7 @@ func (f *FileStorage) Get(ctx context.Context, code types.Code) (ShortenedURL, e
 	return value, nil
 }
 
-func (f *FileStorage) GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
+func (f *FileStorage) GetByUserID(ctx context.Context, userID types.UserID) ([]ShortenedURL, error) {
 	return []ShortenedURL{}, nil
 }
 

@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	users "github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	types "github.com/aleksandrpnshkn/go-shortener/internal/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -42,10 +42,10 @@ func (m *MockAuther) EXPECT() *MockAutherMockRecorder {
 }
 
 // FromUserContext mocks base method.
-func (m *MockAuther) FromUserContext(ctx context.Context) (*users.User, error) {
+func (m *MockAuther) FromUserContext(ctx context.Context) (types.UserID, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FromUserContext", ctx)
-	ret0, _ := ret[0].(*users.User)
+	ret0, _ := ret[0].(types.UserID)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -57,10 +57,10 @@ func (mr *MockAutherMockRecorder) FromUserContext(ctx any) *gomock.Call {
 }
 
 // ParseToken mocks base method.
-func (m *MockAuther) ParseToken(ctx context.Context, token string) (*users.User, error) {
+func (m *MockAuther) ParseToken(ctx context.Context, token string) (types.UserID, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ParseToken", ctx, token)
-	ret0, _ := ret[0].(*users.User)
+	ret0, _ := ret[0].(types.UserID)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -72,10 +72,10 @@ func (mr *MockAutherMockRecorder) ParseToken(ctx, token any) *gomock.Call {
 }
 
 // RegisterUser mocks base method.
-func (m *MockAuther) RegisterUser(ctx context.Context) (*users.User, string, error) {
+func (m *MockAuther) RegisterUser(ctx context.Context) (types.UserID, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RegisterUser", ctx)
-	ret0, _ := ret[0].(*users.User)
+	ret0, _ := ret[0].(types.UserID)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

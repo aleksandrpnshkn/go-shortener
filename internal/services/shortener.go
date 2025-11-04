@@ -2,9 +2,10 @@ package services
 
 import (
 	"context"
+	"time"
 
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
@@ -14,12 +15,13 @@ type ShortenedURL struct {
 }
 
 type Shortener struct {
-	codesReserver CodesReserver
-	urlsStorage   urls.Storage
-	baseURL       string
+	codesReserver      CodesReserver
+	urlsStorage        urls.Storage
+	baseURL            string
+	shortenedPublisher *audit.Publisher
 }
 
-func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, user *users.User) (shortURL types.ShortURL, hasConflict bool, err error) {
+func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, userID types.UserID) (shortURL types.ShortURL, hasConflict bool, err error) {
 	code, err := s.codesReserver.GetCode(ctx)
 	if err != nil {
 		return shortURL, hasConflict, err
@@ -30,12 +32,19 @@ func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, 
 		OriginalURL: originalURL,
 	}
 
-	storedURL, hasConflict, err := s.urlsStorage.Set(ctx, urlToStore, user)
+	shortenedAt := time.Now()
+	storedURL, hasConflict, err := s.urlsStorage.Set(ctx, urlToStore, userID)
 	if err != nil {
 		return shortURL, hasConflict, err
 	}
 
 	shortURL = s.makeShortURL(storedURL.Code)
+
+	s.shortenedPublisher.Notify(ctx, audit.NewShortenedEvent(
+		shortenedAt,
+		userID,
+		originalURL,
+	))
 
 	return shortURL, hasConflict, nil
 }
@@ -43,7 +52,7 @@ func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, 
 func (s *Shortener) ShortenMany(
 	ctx context.Context,
 	originalURLs map[string]types.OriginalURL,
-	user *users.User,
+	userID types.UserID,
 ) (shortURLs map[string]types.ShortURL, err error) {
 	urlsToStore := make(map[string]urls.ShortenedURL, len(originalURLs))
 	shortURLs = make(map[string]types.ShortURL, len(originalURLs))
@@ -60,20 +69,28 @@ func (s *Shortener) ShortenMany(
 		}
 	}
 
-	storedURLs, _, err := s.urlsStorage.SetMany(ctx, urlsToStore, user)
+	shortenedAt := time.Now()
+
+	storedURLs, _, err := s.urlsStorage.SetMany(ctx, urlsToStore, userID)
 	if err != nil {
 		return nil, err
 	}
 
 	for correlationID, url := range storedURLs {
+		s.shortenedPublisher.Notify(ctx, audit.NewShortenedEvent(
+			shortenedAt,
+			userID,
+			url.OriginalURL,
+		))
+
 		shortURLs[correlationID] = s.makeShortURL(url.Code)
 	}
 
 	return shortURLs, nil
 }
 
-func (s *Shortener) GetUserURLs(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
-	userURLs, err := s.urlsStorage.GetByUserID(ctx, user)
+func (s *Shortener) GetUserURLs(ctx context.Context, userID types.UserID) ([]ShortenedURL, error) {
+	userURLs, err := s.urlsStorage.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -99,11 +116,13 @@ func NewShortener(
 	codesReserver CodesReserver,
 	urlsStorage urls.Storage,
 	baseURL string,
+	shortenedPublisher *audit.Publisher,
 ) *Shortener {
 	shortener := Shortener{
-		codesReserver: codesReserver,
-		urlsStorage:   urlsStorage,
-		baseURL:       baseURL,
+		codesReserver:      codesReserver,
+		urlsStorage:        urlsStorage,
+		baseURL:            baseURL,
+		shortenedPublisher: shortenedPublisher,
 	}
 
 	return &shortener

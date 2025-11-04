@@ -8,7 +8,6 @@ import (
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
@@ -24,7 +23,7 @@ type Unshortener struct {
 func (s *Unshortener) Unshorten(
 	ctx context.Context,
 	code types.Code,
-	user *users.User,
+	userID types.UserID,
 ) (types.OriginalURL, error) {
 	followedAt := time.Now()
 
@@ -40,7 +39,7 @@ func (s *Unshortener) Unshorten(
 
 	s.followedPublisher.Notify(ctx, audit.NewFollowEvent(
 		followedAt,
-		user,
+		userID,
 		url.OriginalURL,
 	))
 

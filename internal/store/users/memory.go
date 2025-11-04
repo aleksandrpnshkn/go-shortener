@@ -2,6 +2,8 @@ package users
 
 import (
 	"context"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
 type MemoryStorage struct {
@@ -12,12 +14,12 @@ func (m *MemoryStorage) Ping(ctx context.Context) error {
 	return nil
 }
 
-func (m *MemoryStorage) Get(ctx context.Context, userID int64) (*User, error) {
+func (m *MemoryStorage) Get(ctx context.Context, userID types.UserID) (*User, error) {
 	return m.fakeUser, nil
 }
 
-func (m *MemoryStorage) Create(ctx context.Context) (*User, error) {
-	return m.fakeUser, nil
+func (m *MemoryStorage) Create(ctx context.Context) (types.UserID, error) {
+	return m.fakeUser.ID, nil
 }
 
 func (m *MemoryStorage) Close() error {

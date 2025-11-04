@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"go.uber.org/zap"
 )
 
@@ -27,11 +27,11 @@ func NewAuthMiddleware(
 			}
 
 			var token string
-			var user *users.User
+			var userID types.UserID
 
 			if err == http.ErrNoCookie {
 				if enableRegistration {
-					user, token, err = auther.RegisterUser(ctx)
+					userID, token, err = auther.RegisterUser(ctx)
 					if err != nil {
 						logger.Error("failed to register new user", zap.Error(err))
 						res.WriteHeader(http.StatusInternalServerError)
@@ -49,7 +49,7 @@ func NewAuthMiddleware(
 					http.SetCookie(res, authCookie)
 				}
 			} else {
-				user, err = auther.ParseToken(ctx, authCookie.Value)
+				userID, err = auther.ParseToken(ctx, authCookie.Value)
 				if err != nil {
 					if err == services.ErrInvalidToken {
 						res.WriteHeader(http.StatusUnauthorized)
@@ -62,7 +62,7 @@ func NewAuthMiddleware(
 				}
 			}
 
-			req = req.WithContext(services.NewUserContext(ctx, user))
+			req = req.WithContext(services.NewUserContext(ctx, userID))
 
 			next.ServeHTTP(res, req)
 		})

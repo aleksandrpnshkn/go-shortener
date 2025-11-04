@@ -32,14 +32,14 @@ func TestGetURLByCode(t *testing.T) {
 	urlsStorage.Set(context.Background(), urls.ShortenedURL{
 		Code:        existedCode,
 		OriginalURL: fullURL,
-	}, &user)
+	}, user.ID)
 
 	followedPublisher := audit.NewPublisher([]audit.Observer{})
 	unshortener := services.NewUnshortener(urlsStorage, followedPublisher)
 
 	t.Run("existed short url", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+		auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/"+string(existedCode), nil)
@@ -58,7 +58,7 @@ func TestGetURLByCode(t *testing.T) {
 
 	t.Run("unknown short url", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+		auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
 
 		unknownCode := "uNkNoWn"
 

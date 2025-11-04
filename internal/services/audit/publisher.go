@@ -14,7 +14,7 @@ type Observer interface {
 type Event interface {
 	GetTime() time.Time
 	GetName() string
-	GetUserID() int64
+	GetUserID() types.UserID
 	GetOriginalURL() types.OriginalURL
 }
 

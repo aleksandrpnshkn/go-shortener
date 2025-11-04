@@ -69,7 +69,7 @@ func TestCreateShortBatch(t *testing.T) {
 
 		t.Run(test.testName, func(t *testing.T) {
 			auther := mocks.NewMockAuther(ctrl)
-			auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+			auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
 
 			w := httptest.NewRecorder()
 			reqBody := strings.NewReader(test.requestRawBody)

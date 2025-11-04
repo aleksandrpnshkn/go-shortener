@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -17,7 +18,7 @@ func (s *SQLStorage) Ping(ctx context.Context) error {
 	return s.pgxpool.Ping(ctx)
 }
 
-func (s *SQLStorage) Get(ctx context.Context, userID int64) (*User, error) {
+func (s *SQLStorage) Get(ctx context.Context, userID types.UserID) (*User, error) {
 	var user User
 
 	row := s.pgxpool.QueryRow(ctx, "SELECT id FROM users WHERE id = $1", userID)
@@ -32,16 +33,16 @@ func (s *SQLStorage) Get(ctx context.Context, userID int64) (*User, error) {
 	return &user, nil
 }
 
-func (s *SQLStorage) Create(ctx context.Context) (*User, error) {
-	var user User
+func (s *SQLStorage) Create(ctx context.Context) (types.UserID, error) {
+	var userID types.UserID
 
 	row := s.pgxpool.QueryRow(ctx, "INSERT INTO users (id) VALUES (DEFAULT) RETURNING id")
-	err := row.Scan(&user.ID)
+	err := row.Scan(&userID)
 	if err != nil {
-		return nil, err
+		return GuestID, err
 	}
 
-	return &user, nil
+	return userID, nil
 }
 
 func (s *SQLStorage) Close() error {

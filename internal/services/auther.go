@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -14,11 +15,11 @@ type Claims struct {
 }
 
 type Auther interface {
-	ParseToken(ctx context.Context, token string) (*users.User, error)
+	ParseToken(ctx context.Context, token string) (types.UserID, error)
 
-	RegisterUser(ctx context.Context) (*users.User, string, error)
+	RegisterUser(ctx context.Context) (types.UserID, string, error)
 
-	FromUserContext(ctx context.Context) (*users.User, error)
+	FromUserContext(ctx context.Context) (types.UserID, error)
 }
 
 type JwtAuther struct {
@@ -33,57 +34,48 @@ var (
 	ErrInvalidToken = errors.New("invalid token")
 )
 
-const ctxUser ctxKey = "user"
+const ctxUserID ctxKey = "user"
 
-func (a *JwtAuther) ParseToken(ctx context.Context, tokenString string) (*users.User, error) {
+func (a *JwtAuther) ParseToken(ctx context.Context, tokenString string) (types.UserID, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
 		return []byte(a.secretKey), nil
 	})
 	if err != nil {
-		return nil, ErrInvalidToken
+		return users.GuestID, ErrInvalidToken
 	}
 
 	claims := token.Claims.(*Claims)
 
-	user, err := a.usersStorage.Get(ctx, claims.UserID)
-	if err != nil {
-		if err == users.ErrUserNotFound {
-			return nil, ErrInvalidToken
-		} else {
-			return nil, err
-		}
-	}
-
-	return user, nil
+	return types.UserID(claims.UserID), nil
 }
 
-func (a *JwtAuther) RegisterUser(ctx context.Context) (*users.User, string, error) {
-	user, err := a.usersStorage.Create(ctx)
+func (a *JwtAuther) RegisterUser(ctx context.Context) (types.UserID, string, error) {
+	userID, err := a.usersStorage.Create(ctx)
 	if err != nil {
-		return nil, "", err
+		return users.GuestID, "", err
 	}
 
-	token, err := a.createAuthToken(user.ID)
+	token, err := a.createAuthToken(userID)
 	if err != nil {
-		return nil, "", err
+		return users.GuestID, "", err
 	}
 
-	return user, token, nil
+	return userID, token, nil
 }
 
-func (a *JwtAuther) FromUserContext(ctx context.Context) (*users.User, error) {
-	user, ok := ctx.Value(ctxUser).(*users.User)
+func (a *JwtAuther) FromUserContext(ctx context.Context) (types.UserID, error) {
+	userID, ok := ctx.Value(ctxUserID).(types.UserID)
 	if !ok {
-		return nil, errors.New("user is not set")
+		return users.GuestID, errors.New("user is not set")
 	}
 
-	return user, nil
+	return userID, nil
 }
 
-func (a *JwtAuther) createAuthToken(userID int64) (string, error) {
+func (a *JwtAuther) createAuthToken(userID types.UserID) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{},
-		UserID:           userID,
+		UserID:           int64(userID),
 	})
 
 	tokenString, err := token.SignedString([]byte(a.secretKey))
@@ -101,6 +93,6 @@ func NewAuther(usersStorage users.Storage, secretKey string) *JwtAuther {
 	}
 }
 
-func NewUserContext(ctx context.Context, user *users.User) context.Context {
-	return context.WithValue(ctx, ctxUser, user)
+func NewUserContext(ctx context.Context, userID types.UserID) context.Context {
+	return context.WithValue(ctx, ctxUserID, userID)
 }

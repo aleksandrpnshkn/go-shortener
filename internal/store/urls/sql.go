@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -25,7 +24,7 @@ func (s *SQLStorage) Close() error {
 	return nil
 }
 
-func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error) {
+func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, userID types.UserID) (storedURL ShortenedURL, hasConflict bool, err error) {
 	row := s.pgxpool.QueryRow(ctx, `
 		INSERT INTO urls (code, original_url, user_id) 
 		VALUES (@code, @originalUrl, @userId) 
@@ -35,7 +34,7 @@ func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, user *users.User
 	`, pgx.NamedArgs{
 		"code":        url.Code,
 		"originalUrl": url.OriginalURL,
-		"userId":      user.ID,
+		"userId":      userID,
 	})
 
 	err = row.Scan(&storedURL.Code, &storedURL.OriginalURL)
@@ -50,7 +49,7 @@ func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, user *users.User
 	return storedURL, hasConflict, nil
 }
 
-func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
+func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, userID types.UserID) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
 	hasConflicts = false
 
 	tx, err := s.pgxpool.Begin(ctx)
@@ -62,7 +61,7 @@ func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, 
 	storedURLs = make(map[string]ShortenedURL, len(urls))
 
 	for key, url := range urls {
-		storedURL, hasConflict, err := s.Set(ctx, url, user)
+		storedURL, hasConflict, err := s.Set(ctx, url, userID)
 		if err != nil {
 			return nil, hasConflicts, err
 		}
@@ -92,10 +91,10 @@ func (s *SQLStorage) Get(ctx context.Context, code types.Code) (ShortenedURL, er
 	return shortenedURL, nil
 }
 
-func (s *SQLStorage) GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
+func (s *SQLStorage) GetByUserID(ctx context.Context, userID types.UserID) ([]ShortenedURL, error) {
 	urls := []ShortenedURL{}
 
-	rows, err := s.pgxpool.Query(ctx, "SELECT code, original_url FROM urls WHERE user_id = $1 AND is_deleted = false", user.ID)
+	rows, err := s.pgxpool.Query(ctx, "SELECT code, original_url FROM urls WHERE user_id = $1 AND is_deleted = false", userID)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +125,7 @@ func (s *SQLStorage) DeleteManyByUserID(ctx context.Context, commands []DeleteCo
 	}
 
 	for _, cmd := range commands {
-		batch.Queue("UPDATE urls SET is_deleted = true WHERE user_id = $1 AND code = $2", cmd.User.ID, cmd.Code)
+		batch.Queue("UPDATE urls SET is_deleted = true WHERE user_id = $1 AND code = $2", cmd.UserID, cmd.Code)
 	}
 
 	results := s.pgxpool.SendBatch(ctx, &batch)

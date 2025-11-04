@@ -34,10 +34,10 @@ func TestGetUserURLs(t *testing.T) {
 		userURLs := []urls.ShortenedURL{testURL}
 
 		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+		auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
 
 		urlsStorage := mocks.NewMockURLsStorage(ctrl)
-		urlsStorage.EXPECT().GetByUserID(gomock.Any(), &user).Return(userURLs, nil)
+		urlsStorage.EXPECT().GetByUserID(gomock.Any(), user.ID).Return(userURLs, nil)
 		shortener := services.NewShortener(
 			context.Background(),
 			mocks.NewMockCodesReserver(ctrl),
@@ -68,10 +68,10 @@ func TestGetUserURLs(t *testing.T) {
 
 	t.Run("user has no urls", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+		auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
 
 		urlsStorage := mocks.NewMockURLsStorage(ctrl)
-		urlsStorage.EXPECT().GetByUserID(gomock.Any(), &user).Return([]urls.ShortenedURL{}, nil)
+		urlsStorage.EXPECT().GetByUserID(gomock.Any(), user.ID).Return([]urls.ShortenedURL{}, nil)
 
 		shortener := services.NewShortener(
 			context.Background(),

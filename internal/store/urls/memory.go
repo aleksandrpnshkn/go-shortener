@@ -3,7 +3,6 @@ package urls
 import (
 	"context"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
@@ -23,7 +22,7 @@ func (m *MemoryStorage) Get(ctx context.Context, code types.Code) (ShortenedURL,
 	return value, nil
 }
 
-func (m *MemoryStorage) GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
+func (m *MemoryStorage) GetByUserID(ctx context.Context, userID types.UserID) ([]ShortenedURL, error) {
 	return []ShortenedURL{}, nil
 }
 
@@ -31,9 +30,9 @@ func (m *MemoryStorage) DeleteManyByUserID(ctx context.Context, commands []Delet
 	return nil
 }
 
-func (m *MemoryStorage) Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error) {
+func (m *MemoryStorage) Set(ctx context.Context, url ShortenedURL, userID types.UserID) (storedURL ShortenedURL, hasConflict bool, err error) {
 	const key = "k"
-	storedURLs, hasConflict, err := m.SetMany(ctx, map[string]ShortenedURL{key: url}, user)
+	storedURLs, hasConflict, err := m.SetMany(ctx, map[string]ShortenedURL{key: url}, userID)
 	if err != nil {
 		return url, hasConflict, err
 	}
@@ -41,7 +40,7 @@ func (m *MemoryStorage) Set(ctx context.Context, url ShortenedURL, user *users.U
 	return storedURLs[key], hasConflict, err
 }
 
-func (m *MemoryStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
+func (m *MemoryStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, userID types.UserID) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
 	hasConflicts = false
 	storedURLs = make(map[string]ShortenedURL, len(urls))
 

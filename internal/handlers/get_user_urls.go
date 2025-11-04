@@ -21,18 +21,18 @@ func GetUserURLs(
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "application/json")
 
-		user, err := auther.FromUserContext(req.Context())
+		userID, err := auther.FromUserContext(req.Context())
 		if err != nil {
 			logger.Error("failed to get user", zap.Error(err))
 			res.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		userURLs, err := shortener.GetUserURLs(req.Context(), user)
+		userURLs, err := shortener.GetUserURLs(req.Context(), userID)
 		if err != nil {
 			logger.Error("failed to get user urls",
 				zap.Error(err),
-				zap.Int64("user_id", user.ID),
+				zap.Int64("user_id", int64(userID)),
 			)
 			res.WriteHeader(http.StatusInternalServerError)
 			return

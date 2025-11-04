@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
@@ -15,20 +14,20 @@ type ShortenedURL struct {
 }
 
 type DeleteCode struct {
-	User users.User
-	Code types.Code
+	UserID types.UserID
+	Code   types.Code
 }
 
 type Storage interface {
 	Ping(ctx context.Context) error
 
-	Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error)
+	Set(ctx context.Context, url ShortenedURL, userID types.UserID) (storedURL ShortenedURL, hasConflict bool, err error)
 
-	SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error)
+	SetMany(ctx context.Context, urls map[string]ShortenedURL, userID types.UserID) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error)
 
 	Get(ctx context.Context, code types.Code) (ShortenedURL, error)
 
-	GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error)
+	GetByUserID(ctx context.Context, userID types.UserID) ([]ShortenedURL, error)
 
 	DeleteManyByUserID(ctx context.Context, batch []DeleteCode) error
 

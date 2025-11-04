@@ -7,14 +7,13 @@ import (
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/services/batcher"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"go.uber.org/zap"
 )
 
 type DeleteCode struct {
-	Code types.Code
-	User users.User
+	Code   types.Code
+	UserID types.UserID
 }
 
 type DeleteURLsExecutor struct {
@@ -37,8 +36,8 @@ func (e *DeleteURLsExecutor) Execute(
 			return errors.New("passed command is not DeleteCode")
 		}
 		deleteCommands = append(deleteCommands, urls.DeleteCode{
-			Code: deleteCode.Code,
-			User: deleteCode.User,
+			Code:   deleteCode.Code,
+			UserID: deleteCode.UserID,
 		})
 	}
 

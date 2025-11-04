@@ -20,7 +20,7 @@ func DeleteUserURLs(
 		ctx := req.Context()
 		res.Header().Add("Content-Type", "application/json")
 
-		user, err := auther.FromUserContext(ctx)
+		userID, err := auther.FromUserContext(ctx)
 		if err != nil {
 			logger.Error("failed to get user", zap.Error(err))
 			res.WriteHeader(http.StatusInternalServerError)
@@ -43,8 +43,8 @@ func DeleteUserURLs(
 
 		for _, code := range codes {
 			deleteCodeCommand := services.DeleteCode{
-				Code: code,
-				User: *user,
+				Code:   code,
+				UserID: userID,
 			}
 
 			deletionBatcher.Add(ctx, deleteCodeCommand)

@@ -3,13 +3,12 @@ package audit
 import (
 	"time"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
 type ShortenedEvent struct {
 	time        time.Time
-	user        *users.User
+	userID      types.UserID
 	originalURL types.OriginalURL
 }
 
@@ -21,8 +20,8 @@ func (e *ShortenedEvent) GetName() string {
 	return "shorten"
 }
 
-func (e *ShortenedEvent) GetUserID() int64 {
-	return e.user.ID
+func (e *ShortenedEvent) GetUserID() types.UserID {
+	return e.userID
 }
 
 func (e *ShortenedEvent) GetOriginalURL() types.OriginalURL {
@@ -31,12 +30,12 @@ func (e *ShortenedEvent) GetOriginalURL() types.OriginalURL {
 
 func NewShortenedEvent(
 	time time.Time,
-	user *users.User,
+	userID types.UserID,
 	originalURL types.OriginalURL,
 ) *ShortenedEvent {
 	return &ShortenedEvent{
 		time:        time,
-		user:        user,
+		userID:      userID,
 		originalURL: originalURL,
 	}
 }

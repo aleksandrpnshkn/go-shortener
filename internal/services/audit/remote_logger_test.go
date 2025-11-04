@@ -22,7 +22,7 @@ func TestRemoteLogger(t *testing.T) {
 
 				assert.Equal(
 					t,
-					`{"ts":12345678,"action":"shorten","user_id":"12315134","url":"https://mylongdomain.com/my/long/path/to/shorten/"}`,
+					`[{"ts":12345678,"action":"shorten","user_id":"12315134","url":"https://mylongdomain.com/my/long/path/to/shorten/"}]`,
 					string(rawLogs),
 					"check request content",
 				)
@@ -31,11 +31,13 @@ func TestRemoteLogger(t *testing.T) {
 		defer srv.Close()
 
 		remoteLogger := NewRemoteLogger(srv.Client(), srv.URL)
-		err := remoteLogger.SendEntry(context.Background(), Entry{
-			TimeTS:      time.Unix(12345678, 0).Unix(),
-			Action:      "shorten",
-			UserID:      "12315134",
-			OriginalURL: "https://mylongdomain.com/my/long/path/to/shorten/",
+		err := remoteLogger.SendEntries(context.Background(), []Entry{
+			{
+				TimeTS:      time.Unix(12345678, 0).Unix(),
+				Action:      "shorten",
+				UserID:      "12315134",
+				OriginalURL: "https://mylongdomain.com/my/long/path/to/shorten/",
+			},
 		})
 
 		assert.NoError(t, err, "should be no error")

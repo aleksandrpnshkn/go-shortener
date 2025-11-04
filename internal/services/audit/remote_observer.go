@@ -2,27 +2,38 @@ package audit
 
 import (
 	"context"
+	"time"
 
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/batcher"
 	"go.uber.org/zap"
 )
 
+type EntriesBatcher interface {
+	Add(ctx context.Context, entry Entry)
+}
+
 type RemoteObserver struct {
-	logger       *zap.Logger
-	remoteLogger *RemoteLogger
+	batcher *batcher.Batcher
 }
 
 func (o *RemoteObserver) HandleEvent(ctx context.Context, event Event) {
-	entry := NewEntryFromAuditEvent(event)
-
-	err := o.remoteLogger.SendEntry(ctx, entry)
-	if err != nil {
-		o.logger.Error("observer failed to send entry to remote log", zap.Error(err))
-	}
+	o.batcher.Add(ctx, NewEntryFromAuditEvent(event))
 }
 
-func NewRemoteObserver(logger *zap.Logger, remoteLogger *RemoteLogger) *RemoteObserver {
+func NewRemoteObserver(
+	ctx context.Context,
+	logger *zap.Logger,
+	remoteLogger *RemoteLogger,
+) *RemoteObserver {
+
+	remoteBatchSender := NewRemoteBatchSender(remoteLogger)
+
+	batchSize := 200
+	batchDelay := 200 * time.Millisecond
+
+	batcher := batcher.NewBatcher(ctx, logger, remoteBatchSender, batchSize, batchDelay)
+
 	return &RemoteObserver{
-		logger:       logger,
-		remoteLogger: remoteLogger,
+		batcher: batcher,
 	}
 }

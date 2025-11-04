@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/batcher"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"go.uber.org/zap"
 )
@@ -13,7 +14,7 @@ import (
 func DeleteUserURLs(
 	logger *zap.Logger,
 	auther services.Auther,
-	deletionBatcher *services.Batcher,
+	deletionBatcher *batcher.Batcher,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()

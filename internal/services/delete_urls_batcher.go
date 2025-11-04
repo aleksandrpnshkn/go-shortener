@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/batcher"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
@@ -26,7 +27,7 @@ func (e *DeleteURLsExecutor) GetName() string {
 
 func (e *DeleteURLsExecutor) Execute(
 	ctx context.Context,
-	params []BatchParam,
+	params []batcher.BatchParam,
 ) error {
 	deleteCommands := make([]urls.DeleteCode, 0, len(params))
 
@@ -44,11 +45,11 @@ func (e *DeleteURLsExecutor) Execute(
 	return e.urlsStorage.DeleteManyByUserID(ctx, deleteCommands)
 }
 
-func NewDeletionBatcher(
+func NewDeleteURLsBatcher(
 	ctx context.Context,
 	logger *zap.Logger,
 	urlsStorage urls.Storage,
-) *Batcher {
+) *batcher.Batcher {
 	deleteURLsExecutor := &DeleteURLsExecutor{
 		urlsStorage: urlsStorage,
 	}
@@ -56,7 +57,7 @@ func NewDeletionBatcher(
 	batchSize := 100
 	batchDelay := 200 * time.Millisecond
 
-	q := NewBatcher(ctx, logger, deleteURLsExecutor, batchSize, batchDelay)
+	q := batcher.NewBatcher(ctx, logger, deleteURLsExecutor, batchSize, batchDelay)
 
 	return q
 }

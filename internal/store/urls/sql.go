@@ -84,9 +84,9 @@ func (s *SQLStorage) Get(ctx context.Context, code types.Code) (ShortenedURL, er
 	err := row.Scan(&shortenedURL.Code, &shortenedURL.OriginalURL, &shortenedURL.IsDeleted)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return ShortenedURL{}, ErrCodeNotFound
+			return shortenedURL, ErrCodeNotFound
 		}
-		return ShortenedURL{}, err
+		return shortenedURL, err
 	}
 
 	return shortenedURL, nil

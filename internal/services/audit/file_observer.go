@@ -17,7 +17,6 @@ func (o *FileObserver) HandleEvent(ctx context.Context, event Event) {
 	case <-ctx.Done():
 	case o.ch <- event:
 	}
-
 }
 
 func NewFileObserver(

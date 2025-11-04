@@ -13,13 +13,13 @@ type RemoteLogger struct {
 	logsURL string
 }
 
-func (r *RemoteLogger) SendEntry(ctx context.Context, entry Entry) error {
-	rawEntry, err := json.Marshal(entry)
+func (r *RemoteLogger) SendEntries(ctx context.Context, entries []Entry) error {
+	rawEntries, err := json.Marshal(entries)
 	if err != nil {
 		return err
 	}
 
-	body := bytes.NewReader(rawEntry)
+	body := bytes.NewReader(rawEntries)
 	req, err := http.NewRequestWithContext(ctx, "POST", r.logsURL, body)
 	if err != nil {
 		return err

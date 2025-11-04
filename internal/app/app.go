@@ -56,7 +56,7 @@ func Run(
 
 	if config.Audit.URL != "" {
 		remoteLogger := audit.NewRemoteLogger(&http.Client{}, config.Audit.URL)
-		remoteObserver := audit.NewRemoteObserver(logger, remoteLogger)
+		remoteObserver := audit.NewRemoteObserver(ctx, logger, remoteLogger)
 		auditObservers = append(auditObservers, remoteObserver)
 	}
 
@@ -75,7 +75,7 @@ func Run(
 	unshortener := services.NewUnshortener(urlsStorage, followedPublisher)
 
 	auther := services.NewAuther(usersStorage, config.AuthSecretKey)
-	deletionBatcher := services.NewDeletionBatcher(ctx, logger, urlsStorage)
+	deletionBatcher := services.NewDeleteURLsBatcher(ctx, logger, urlsStorage)
 	defer deletionBatcher.Close()
 
 	router.Use(middlewares.NewLogMiddleware(logger))

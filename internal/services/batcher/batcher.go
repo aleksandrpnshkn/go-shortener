@@ -1,3 +1,6 @@
+// Пакет batcher представляет собой абстракцию (воркер на базе шаблонного метода) для сбора отдельных операций и последующим выполнением их одной пачкой.
+// Благодаря этому в некоторых случаях можно сильно сэкономить ресурсы.
+// Пачка операций запускается в отдельной горутине, благодаря чему освобождаются ресурсы у хендлеров.
 package batcher
 
 import (
@@ -10,11 +13,13 @@ import (
 
 type BatchParam any
 
+// BatchExecutor выполняет операцию над собранной пачкой операций.
 type BatchExecutor interface {
 	GetName() string
 	Execute(ctx context.Context, params []BatchParam) error
 }
 
+// Batcher - вор
 type Batcher struct {
 	appCtx        context.Context
 	logger        *zap.Logger
@@ -24,6 +29,7 @@ type Batcher struct {
 	t             *time.Ticker
 }
 
+// Add добавляет операцию в пачку.
 func (b *Batcher) Add(ctx context.Context, param BatchParam) {
 	if len(b.inputCh) >= b.batchSize {
 		go func() {
@@ -39,6 +45,7 @@ func (b *Batcher) Add(ctx context.Context, param BatchParam) {
 	}
 }
 
+// RunBatch запускает выполнение логики над собранной пачкой операций.
 func (b *Batcher) RunBatch() {
 	params := []BatchParam{}
 

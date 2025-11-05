@@ -14,6 +14,7 @@ type ShortenedURL struct {
 	ShortURL    types.ShortURL
 }
 
+// Shortener - сокращатель ссылок.
 type Shortener struct {
 	codesReserver      CodesReserver
 	urlsStorage        urls.Storage
@@ -21,6 +22,8 @@ type Shortener struct {
 	shortenedPublisher *audit.Publisher
 }
 
+// Shorten сокращает URL и сохраняет его в хранилище.
+// Также метод проверяет наличие дублей в БД.
 func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, userID types.UserID) (shortURL types.ShortURL, hasConflict bool, err error) {
 	code, err := s.codesReserver.GetCode(ctx)
 	if err != nil {
@@ -49,6 +52,7 @@ func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, 
 	return shortURL, hasConflict, nil
 }
 
+// Shorten сокращает множество URLов и сохраняет его в хранилище.
 func (s *Shortener) ShortenMany(
 	ctx context.Context,
 	originalURLs map[string]types.OriginalURL,
@@ -89,6 +93,7 @@ func (s *Shortener) ShortenMany(
 	return shortURLs, nil
 }
 
+// GetUserURLs получает из хранилища все короткие ссылки пользователя
 func (s *Shortener) GetUserURLs(ctx context.Context, userID types.UserID) ([]ShortenedURL, error) {
 	userURLs, err := s.urlsStorage.GetByUserID(ctx, userID)
 	if err != nil {

@@ -1,3 +1,4 @@
+// Пакет middlewares содержит основные middleware приложения
 package middlewares
 
 import (
@@ -11,6 +12,8 @@ import (
 
 const authCookieName = "auth_token"
 
+// NewAuthMiddleware создаёт middleware, который аутентифицирует пользователей.
+// Важный нюанс - для неопознанного пользователя неявным образом создаётся новый юзер в БД и выдаётся токен в куке ответа auth_token.
 func NewAuthMiddleware(
 	logger *zap.Logger,
 	auther services.Auther,

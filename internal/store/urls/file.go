@@ -10,6 +10,8 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// FileStorage - файловое хранилище сокращённых ссылок.
+// Реализует ограниченный набор методов.
 type FileStorage struct {
 	file    *os.File
 	scanner *bufio.Scanner

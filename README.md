@@ -135,6 +135,14 @@ go install golang.org/x/tools/cmd/goimports@latest
 goimports -local "github.com/aleksandrpnshkn/go-shortener" -w ./..
 ```
 
+## Документация
+```bash
+go install -v golang.org/x/tools/cmd/godoc@latest 
+
+# пример доки для одного из пакетов
+go doc -all ./internal/middlewares/compress/
+```
+
 ## Профилирование 
 
 Профилирую два базовых сценария. Они основные для сервиса, и в них есть новый аудит, который следовало бы оптимизировать.

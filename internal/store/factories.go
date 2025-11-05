@@ -1,3 +1,4 @@
+// Пакет store содержит в логику работы со слоем хранения данных.
 package store
 
 import (
@@ -10,6 +11,9 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 )
 
+// NewURLsStorage создаёт интерфейс для работы с хранилищем сокращённых ссылок.
+// В зависимости от переданных параметров может вернуть разные реализации хранилища.
+// Дополнительно запускает миграции.
 func NewURLsStorage(
 	ctx context.Context,
 	databaseDSN string,
@@ -38,6 +42,8 @@ func NewURLsStorage(
 	return storage, nil
 }
 
+// NewUsersStorage создаёт интерфейс для работы с хранилищем пользователей.
+// В зависимости от переданных параметров может вернуть разные реализации хранилища.
 func NewUsersStorage(
 	ctx context.Context,
 	databaseDSN string,

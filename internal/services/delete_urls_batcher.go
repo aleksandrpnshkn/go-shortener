@@ -12,11 +12,13 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// DeleteCode - команда для удаления короткой ссылки из БД
 type DeleteCode struct {
 	Code   types.Code
 	UserID types.UserID
 }
 
+// DeleteURLsExecutor удаляет пачку ссылок, которую ему передаёт batcher.Batcher
 type DeleteURLsExecutor struct {
 	urlsStorage urls.Storage
 }

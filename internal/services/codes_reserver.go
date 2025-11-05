@@ -15,6 +15,9 @@ type CodesReserver interface {
 	GetCode(ctx context.Context) (types.Code, error)
 }
 
+// UniqueCodesReserver резервирует уникальные коды.
+// Это нужно из-за необходимости проверки на уникальность через БД.
+// Для поддержания списка зарезервированных кодов при создании генератора запускается фоновый воркер.
 type UniqueCodesReserver struct {
 	logger        *zap.Logger
 	codeGenerator CodeGenerator
@@ -23,6 +26,8 @@ type UniqueCodesReserver struct {
 	reservedCodes chan types.Code
 }
 
+// GetCode - получить сгенерированный уникальный код.
+// Если код ещё не сгенерирован - будет ждать.
 func (u *UniqueCodesReserver) GetCode(ctx context.Context) (types.Code, error) {
 	select {
 	case <-ctx.Done():
@@ -68,6 +73,7 @@ func (u *UniqueCodesReserver) run(ctx context.Context) {
 	}()
 }
 
+// NewCodesReserver создаёт генератор кодов
 func NewCodesReserver(
 	ctx context.Context,
 	logger *zap.Logger,

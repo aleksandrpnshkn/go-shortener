@@ -18,10 +18,12 @@ func randStringRunes(n int) string {
 	return string(b)
 }
 
+// CodeGenerator - интерфейс для генерации кодов.
 type CodeGenerator interface {
 	Generate() types.Code
 }
 
+// RandomCodeGenerator генерирует случайные коды.
 type RandomCodeGenerator struct {
 	codeLength int
 }
@@ -37,6 +39,7 @@ func NewRandomCodeGenerator(codeLength int) CodeGenerator {
 	return &generator
 }
 
+// TestCodeGenerator генерирует коды по заданному шаблону для удобства тестирования.
 type TestCodeGenerator struct {
 	testCodePrefix string
 	counter        int

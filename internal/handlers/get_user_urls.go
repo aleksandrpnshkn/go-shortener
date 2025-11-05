@@ -14,6 +14,7 @@ type shortenedURL struct {
 	ShortURL    string `json:"short_url"`
 }
 
+// GetUserURLs - хендлер для получения всех сокращённых URLов пользователя в JSON API.
 func GetUserURLs(
 	shortener *services.Shortener,
 	logger *zap.Logger,

@@ -1,3 +1,5 @@
+// Модуль compress содержит в себе middleware для распаковки запроса/сжатия ответов сервера.
+// Поддерживает формат gzip.
 package compress
 
 import (

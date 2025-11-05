@@ -12,6 +12,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// DeleteUserURLs - хендлер для удаления пачки сокращённых URLов в JSON API.
 func DeleteUserURLs(
 	logger *zap.Logger,
 	auther services.Auther,

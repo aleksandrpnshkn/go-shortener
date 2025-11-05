@@ -4,6 +4,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// NewLogger создаёт новый логгер для приложения.
 func NewLogger(level string) (*zap.Logger, error) {
 	zapLevel, err := zap.ParseAtomicLevel(level)
 	if err != nil {

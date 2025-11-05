@@ -8,6 +8,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// GetURLByCode - хендлер для открытия сокращённого URLа.
 func GetURLByCode(auther services.Auther, unshortener *services.Unshortener) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "text/plain")

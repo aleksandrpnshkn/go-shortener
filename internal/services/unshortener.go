@@ -15,11 +15,13 @@ var (
 	ErrShortURLWasDeleted = errors.New("short url was deleted")
 )
 
+// Unshortener - сервис для получения оригинальных URLов
 type Unshortener struct {
 	urlsStorage       urls.Storage
 	followedPublisher *audit.Publisher
 }
 
+// Unshorten получает оригинальный URL по short-коду из БД
 func (s *Unshortener) Unshorten(
 	ctx context.Context,
 	code types.Code,

@@ -6,6 +6,8 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// MemoryStorage - in-memory хранилище сокращённых ссылок.
+// Реализует ограниченный набор методов.
 type MemoryStorage struct {
 	cache map[types.Code]ShortenedURL
 }

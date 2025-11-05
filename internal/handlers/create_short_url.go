@@ -11,6 +11,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// CreateShortURLPlain - хендлер для сокращения URLа.
 func CreateShortURLPlain(
 	shortener *services.Shortener,
 	logger *zap.Logger,
@@ -58,6 +59,7 @@ type createShortURLResponse struct {
 	Result string `json:"result"`
 }
 
+// CreateShortURL - хендлер для сокращения URLа в JSON API.
 func CreateShortURL(
 	shortener *services.Shortener,
 	logger *zap.Logger,

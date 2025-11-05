@@ -21,6 +21,7 @@ type shortURL struct {
 	ShortURL      string `json:"short_url"`
 }
 
+// CreateShortURLBatch - хендлер для сокращения пачки URLов в JSON API.
 func CreateShortURLBatch(
 	shortener *services.Shortener,
 	logger *zap.Logger,

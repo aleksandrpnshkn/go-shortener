@@ -1,3 +1,5 @@
+// Модуль compress содержит в себе middleware для распаковки запроса/сжатия ответов сервера.
+// Поддерживает формат gzip.
 package compress
 
 import (
@@ -13,18 +15,22 @@ type compressWriter struct {
 	gw *gzip.Writer
 }
 
+// WriteHeader проставляет заголовок в оригинальном ответе
 func (c *compressWriter) WriteHeader(statusCode int) {
 	c.w.WriteHeader(statusCode)
 }
 
+// WriteHeader возвращает заголовок из оригинального ответа
 func (c *compressWriter) Header() http.Header {
 	return c.w.Header()
 }
 
+// Write сжимает ответ
 func (c *compressWriter) Write(b []byte) (int, error) {
 	return c.gw.Write(b)
 }
 
+// Close закрывает архиватор
 func (c *compressWriter) Close() error {
 	return c.gw.Close()
 }
@@ -43,6 +49,7 @@ func newCompressWriter(res http.ResponseWriter) (*compressWriter, error) {
 	return compressWriter, nil
 }
 
+// NewCompressMiddleware создаёт middleware для сжатия тела ответов
 func NewCompressMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {

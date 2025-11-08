@@ -19,16 +19,19 @@ type (
 	}
 )
 
+// Header возвращает заголовок оригинального ответа
 func (l *logWriter) Header() http.Header {
 	return l.w.Header()
 }
 
+// Write пишет данные в оригинальный ответ и считает размер данных
 func (l *logWriter) Write(b []byte) (int, error) {
 	size, err := l.w.Write(b)
 	l.responseData.size += size
 	return size, err
 }
 
+// WriteHeader проставляет статус оригинальному ответу и запоминает его
 func (l *logWriter) WriteHeader(statusCode int) {
 	l.w.WriteHeader(statusCode)
 	l.responseData.status = statusCode
@@ -45,6 +48,7 @@ func newLogWriter(w *http.ResponseWriter) *logWriter {
 	return &writer
 }
 
+// NewAuthMiddleware создаёт middleware, который логирует время, размер и статус запросов.
 func NewLogMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {

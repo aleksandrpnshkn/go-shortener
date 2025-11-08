@@ -5,12 +5,13 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"go.uber.org/zap"
+
 	"github.com/aleksandrpnshkn/go-shortener/internal/app"
 	"github.com/aleksandrpnshkn/go-shortener/internal/config"
 	"github.com/aleksandrpnshkn/go-shortener/internal/logs"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	"go.uber.org/zap"
 )
 
 func main() {

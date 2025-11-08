@@ -5,27 +5,32 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
-	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// SQLStorage - SQL хранилище URLов.
 type SQLStorage struct {
 	pgxpool *pgxpool.Pool
 }
 
+// Ping проверяет доступность хранилища.
 func (s *SQLStorage) Ping(ctx context.Context) error {
 	return s.pgxpool.Ping(ctx)
 }
 
+// Close закрывает соединение с хранилищем.
 func (s *SQLStorage) Close() error {
 	s.pgxpool.Close()
 	return nil
 }
 
-func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, user *users.User) (storedURL ShortenedURL, hasConflict bool, err error) {
+// Set сохраняет короткую ссылку в хранилище.
+// А также проверяет наличие дублей.
+func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, userID types.UserID) (storedURL ShortenedURL, hasConflict bool, err error) {
 	row := s.pgxpool.QueryRow(ctx, `
 		INSERT INTO urls (code, original_url, user_id) 
 		VALUES (@code, @originalUrl, @userId) 
@@ -35,7 +40,7 @@ func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, user *users.User
 	`, pgx.NamedArgs{
 		"code":        url.Code,
 		"originalUrl": url.OriginalURL,
-		"userId":      user.ID,
+		"userId":      userID,
 	})
 
 	err = row.Scan(&storedURL.Code, &storedURL.OriginalURL)
@@ -50,7 +55,9 @@ func (s *SQLStorage) Set(ctx context.Context, url ShortenedURL, user *users.User
 	return storedURL, hasConflict, nil
 }
 
-func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, user *users.User) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
+// SetMany сохраняет множество коротких ссылок в хранилищк.
+// А также проверяет наличие дублей.
+func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, userID types.UserID) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error) {
 	hasConflicts = false
 
 	tx, err := s.pgxpool.Begin(ctx)
@@ -62,7 +69,7 @@ func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, 
 	storedURLs = make(map[string]ShortenedURL, len(urls))
 
 	for key, url := range urls {
-		storedURL, hasConflict, err := s.Set(ctx, url, user)
+		storedURL, hasConflict, err := s.Set(ctx, url, userID)
 		if err != nil {
 			return nil, hasConflicts, err
 		}
@@ -77,6 +84,7 @@ func (s *SQLStorage) SetMany(ctx context.Context, urls map[string]ShortenedURL, 
 	return storedURLs, hasConflicts, tx.Commit(ctx)
 }
 
+// Get достаёт сокращённую ссылку по её коду.
 func (s *SQLStorage) Get(ctx context.Context, code types.Code) (ShortenedURL, error) {
 	var shortenedURL ShortenedURL
 
@@ -84,18 +92,19 @@ func (s *SQLStorage) Get(ctx context.Context, code types.Code) (ShortenedURL, er
 	err := row.Scan(&shortenedURL.Code, &shortenedURL.OriginalURL, &shortenedURL.IsDeleted)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return ShortenedURL{}, ErrCodeNotFound
+			return shortenedURL, ErrCodeNotFound
 		}
-		return ShortenedURL{}, err
+		return shortenedURL, err
 	}
 
 	return shortenedURL, nil
 }
 
-func (s *SQLStorage) GetByUserID(ctx context.Context, user *users.User) ([]ShortenedURL, error) {
+// GetByUserID достаёт все сокращённые ссылки пользователя.
+func (s *SQLStorage) GetByUserID(ctx context.Context, userID types.UserID) ([]ShortenedURL, error) {
 	urls := []ShortenedURL{}
 
-	rows, err := s.pgxpool.Query(ctx, "SELECT code, original_url FROM urls WHERE user_id = $1 AND is_deleted = false", user.ID)
+	rows, err := s.pgxpool.Query(ctx, "SELECT code, original_url FROM urls WHERE user_id = $1 AND is_deleted = false", userID)
 	if err != nil {
 		return nil, err
 	}
@@ -120,11 +129,14 @@ func (s *SQLStorage) GetByUserID(ctx context.Context, user *users.User) ([]Short
 	return urls, nil
 }
 
+// DeleteManyByUserID удаляет все сокращённые ссылки пользователя.
 func (s *SQLStorage) DeleteManyByUserID(ctx context.Context, commands []DeleteCode) error {
-	batch := pgx.Batch{}
+	batch := pgx.Batch{
+		QueuedQueries: make([]*pgx.QueuedQuery, 0, len(commands)),
+	}
 
 	for _, cmd := range commands {
-		batch.Queue("UPDATE urls SET is_deleted = true WHERE user_id = $1 AND code = $2", cmd.User.ID, cmd.Code)
+		batch.Queue("UPDATE urls SET is_deleted = true WHERE user_id = $1 AND code = $2", cmd.UserID, cmd.Code)
 	}
 
 	results := s.pgxpool.SendBatch(ctx, &batch)
@@ -140,6 +152,7 @@ func (s *SQLStorage) DeleteManyByUserID(ctx context.Context, commands []DeleteCo
 	return nil
 }
 
+// NewFileStorage создаёт новое SQL-хранилище для URLов.
 func NewSQLStorage(ctx context.Context, databaseDSN string) (*SQLStorage, error) {
 	pool, err := pgxpool.New(ctx, databaseDSN)
 	if err != nil {

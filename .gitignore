@@ -25,3 +25,6 @@ vendor/
 # Utils
 cmd/client
 test/
+
+# Logs
+audit.log

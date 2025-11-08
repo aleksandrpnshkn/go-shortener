@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"go.uber.org/zap"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 )
 
 type shortenedURL struct {
@@ -13,6 +14,7 @@ type shortenedURL struct {
 	ShortURL    string `json:"short_url"`
 }
 
+// GetUserURLs - хендлер для получения всех сокращённых URLов пользователя в JSON API.
 func GetUserURLs(
 	shortener *services.Shortener,
 	logger *zap.Logger,
@@ -21,18 +23,18 @@ func GetUserURLs(
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Add("Content-Type", "application/json")
 
-		user, err := auther.FromUserContext(req.Context())
+		userID, err := auther.FromUserContext(req.Context())
 		if err != nil {
 			logger.Error("failed to get user", zap.Error(err))
 			res.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		userURLs, err := shortener.GetUserURLs(req.Context(), user)
+		userURLs, err := shortener.GetUserURLs(req.Context(), userID)
 		if err != nil {
 			logger.Error("failed to get user urls",
 				zap.Error(err),
-				zap.Int64("user_id", user.ID),
+				zap.Int64("user_id", int64(userID)),
 			)
 			res.WriteHeader(http.StatusInternalServerError)
 			return

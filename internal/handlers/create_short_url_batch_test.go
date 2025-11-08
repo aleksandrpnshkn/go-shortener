@@ -8,15 +8,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
-	"github.com/aleksandrpnshkn/go-shortener/internal/services"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
-	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"go.uber.org/zap"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
 func TestCreateShortBatch(t *testing.T) {
@@ -63,11 +65,12 @@ func TestCreateShortBatch(t *testing.T) {
 			codesReserver,
 			urlsStorage,
 			"http://localhost",
+			audit.NewPublisher([]audit.Observer{}),
 		)
 
 		t.Run(test.testName, func(t *testing.T) {
 			auther := mocks.NewMockAuther(ctrl)
-			auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+			auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
 
 			w := httptest.NewRecorder()
 			reqBody := strings.NewReader(test.requestRawBody)

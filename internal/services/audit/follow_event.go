@@ -6,28 +6,30 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// FollowEvent - событие открытия ссылки.
 type FollowEvent struct {
 	time        time.Time
 	userID      types.UserID
 	originalURL types.OriginalURL
 }
 
-func (e *FollowEvent) GetTime() time.Time {
+func (e *FollowEvent) getTime() time.Time {
 	return e.time
 }
 
-func (e *FollowEvent) GetName() string {
+func (e *FollowEvent) getName() string {
 	return "follow"
 }
 
-func (e *FollowEvent) GetUserID() types.UserID {
+func (e *FollowEvent) getUserID() types.UserID {
 	return e.userID
 }
 
-func (e *FollowEvent) GetOriginalURL() types.OriginalURL {
+func (e *FollowEvent) getOriginalURL() types.OriginalURL {
 	return e.originalURL
 }
 
+// NewShortenedEvent создаёт новое событие открытия ссылки.
 func NewFollowEvent(
 	time time.Time,
 	userID types.UserID,

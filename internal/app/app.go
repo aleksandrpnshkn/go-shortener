@@ -21,6 +21,7 @@ import (
 const codesLength = 8
 const reservedCodesCount = 30
 
+// Run запускает приложение
 func Run(
 	ctx context.Context,
 	config *config.Config,
@@ -56,8 +57,7 @@ func Run(
 	}
 
 	if config.Audit.URL != "" {
-		remoteLogger := audit.NewRemoteLogger(&http.Client{}, config.Audit.URL)
-		remoteObserver := audit.NewRemoteObserver(ctx, logger, remoteLogger)
+		remoteObserver := audit.NewRemoteObserver(ctx, logger, config.Audit.URL)
 		auditObservers = append(auditObservers, remoteObserver)
 	}
 

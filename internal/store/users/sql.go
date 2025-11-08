@@ -11,14 +11,17 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// SQLStorage - SQL хранилище пользователей.
 type SQLStorage struct {
 	pgxpool *pgxpool.Pool
 }
 
+// Ping проверяет доступность хранилища.
 func (s *SQLStorage) Ping(ctx context.Context) error {
 	return s.pgxpool.Ping(ctx)
 }
 
+// Get достаёт пользователя из хранилища.
 func (s *SQLStorage) Get(ctx context.Context, userID types.UserID) (*User, error) {
 	var user User
 
@@ -34,6 +37,7 @@ func (s *SQLStorage) Get(ctx context.Context, userID types.UserID) (*User, error
 	return &user, nil
 }
 
+// Create создаёт нового пользователя в хранилище.
 func (s *SQLStorage) Create(ctx context.Context) (types.UserID, error) {
 	var userID types.UserID
 
@@ -46,11 +50,14 @@ func (s *SQLStorage) Create(ctx context.Context) (types.UserID, error) {
 	return userID, nil
 }
 
+// Close закрывает соединение с хранилищем.
+// Вызывается при завершении работы программы.
 func (s *SQLStorage) Close() error {
 	s.pgxpool.Close()
 	return nil
 }
 
+// NewSQLStorage создаёт новое SQL-хранилище пользователей.
 func NewSQLStorage(ctx context.Context, databaseDSN string) (*SQLStorage, error) {
 	pool, err := pgxpool.New(ctx, databaseDSN)
 	if err != nil {

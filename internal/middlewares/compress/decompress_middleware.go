@@ -14,10 +14,12 @@ type decompressReader struct {
 	gr *gzip.Reader
 }
 
+// Read распаковывает тело запроса
 func (d *decompressReader) Read(p []byte) (n int, err error) {
 	return d.gr.Read(p)
 }
 
+// Close закрывает распаковщик и тело оригинального запроса
 func (d *decompressReader) Close() error {
 	if err := d.r.Close(); err != nil {
 		return err
@@ -39,6 +41,7 @@ func newDecompressReader(req io.ReadCloser) (*decompressReader, error) {
 	return decompressReader, nil
 }
 
+// NewCompressMiddleware создаёт middleware для распаковки тела запросов
 func NewDecompressMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {

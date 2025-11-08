@@ -11,17 +11,18 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// Ошибки Unshortener.
 var (
 	ErrShortURLWasDeleted = errors.New("short url was deleted")
 )
 
-// Unshortener - сервис для получения оригинальных URLов
+// Unshortener - сервис для получения оригинальных URLов.
 type Unshortener struct {
 	urlsStorage       urls.Storage
 	followedPublisher *audit.Publisher
 }
 
-// Unshorten получает оригинальный URL по short-коду из БД
+// Unshorten получает оригинальный URL по short-коду из БД.
 func (s *Unshortener) Unshorten(
 	ctx context.Context,
 	code types.Code,
@@ -48,6 +49,7 @@ func (s *Unshortener) Unshorten(
 	return url.OriginalURL, nil
 }
 
+// NewUnshortener - создаёт новый Unshortener.
 func NewUnshortener(
 	urlsStorage urls.Storage,
 	followedPublisher *audit.Publisher,

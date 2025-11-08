@@ -10,19 +10,25 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// Claims - информация, зашитая в токен.
 type Claims struct {
 	jwt.RegisteredClaims
 	UserID int64
 }
 
+// Auther - интерфейс для аутентификации пользователей.
 type Auther interface {
+	// ParseToken парсит токен.
 	ParseToken(ctx context.Context, token string) (types.UserID, error)
 
+	// RegisterUser регистрирует юзера.
 	RegisterUser(ctx context.Context) (types.UserID, string, error)
 
+	// FromUserContext достаёт юзера контекста.
 	FromUserContext(ctx context.Context) (types.UserID, error)
 }
 
+// JwtAuther - реализация для аутентификации пользователей на основе JWT-токена.
 type JwtAuther struct {
 	usersStorage users.Storage
 
@@ -31,12 +37,14 @@ type JwtAuther struct {
 
 type ctxKey string
 
+// Ошибки JwtAuther.
 var (
 	ErrInvalidToken = errors.New("invalid token")
 )
 
 const ctxUserID ctxKey = "user"
 
+// ParseToken парсит JWT-токен.
 func (a *JwtAuther) ParseToken(ctx context.Context, tokenString string) (types.UserID, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
 		return []byte(a.secretKey), nil
@@ -50,6 +58,7 @@ func (a *JwtAuther) ParseToken(ctx context.Context, tokenString string) (types.U
 	return types.UserID(claims.UserID), nil
 }
 
+// RegisterUser регистрирует юзера.
 func (a *JwtAuther) RegisterUser(ctx context.Context) (types.UserID, string, error) {
 	userID, err := a.usersStorage.Create(ctx)
 	if err != nil {
@@ -64,6 +73,7 @@ func (a *JwtAuther) RegisterUser(ctx context.Context) (types.UserID, string, err
 	return userID, token, nil
 }
 
+// FromUserContext достаёт юзера контекста.
 func (a *JwtAuther) FromUserContext(ctx context.Context) (types.UserID, error) {
 	userID, ok := ctx.Value(ctxUserID).(types.UserID)
 	if !ok {
@@ -87,6 +97,7 @@ func (a *JwtAuther) createAuthToken(userID types.UserID) (string, error) {
 	return tokenString, nil
 }
 
+// NewAuther достаёт юзера контекста.
 func NewAuther(usersStorage users.Storage, secretKey string) *JwtAuther {
 	return &JwtAuther{
 		usersStorage: usersStorage,
@@ -94,6 +105,7 @@ func NewAuther(usersStorage users.Storage, secretKey string) *JwtAuther {
 	}
 }
 
+// NewUserContext - создаёт контекст с данными юзера.
 func NewUserContext(ctx context.Context, userID types.UserID) context.Context {
 	return context.WithValue(ctx, ctxUserID, userID)
 }

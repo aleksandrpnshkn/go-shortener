@@ -23,10 +23,12 @@ type DeleteURLsExecutor struct {
 	urlsStorage urls.Storage
 }
 
+// GetName возвращает имя.
 func (e *DeleteURLsExecutor) GetName() string {
 	return "delete_orders_executor"
 }
 
+// Execute запускает удаление пачки URLов.
 func (e *DeleteURLsExecutor) Execute(
 	ctx context.Context,
 	params []batcher.BatchParam,
@@ -47,6 +49,7 @@ func (e *DeleteURLsExecutor) Execute(
 	return e.urlsStorage.DeleteManyByUserID(ctx, deleteCommands)
 }
 
+// NewDeleteURLsBatcher создаёт batcher для удаления URLов.
 func NewDeleteURLsBatcher(
 	ctx context.Context,
 	logger *zap.Logger,

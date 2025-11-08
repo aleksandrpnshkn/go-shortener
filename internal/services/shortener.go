@@ -9,6 +9,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// ShortenedURL - сокращённый URL
 type ShortenedURL struct {
 	OriginalURL types.OriginalURL
 	ShortURL    types.ShortURL
@@ -116,6 +117,7 @@ func (s *Shortener) makeShortURL(code types.Code) types.ShortURL {
 	return types.ShortURL(s.baseURL + "/" + string(code))
 }
 
+// NewShortener - создаёт новый Shortener
 func NewShortener(
 	ctx context.Context,
 	codesReserver CodesReserver,

@@ -6,25 +6,27 @@ import (
 	"go.uber.org/zap"
 )
 
-type FileObserver struct {
+type fileObserver struct {
 	logger     *zap.Logger
 	ch         chan<- Event
-	fileLogger *FileLogger
+	fileLogger *fileLogger
 }
 
-func (o *FileObserver) HandleEvent(ctx context.Context, event Event) {
+// HandleEvent обрабатывает событие.
+func (o *fileObserver) HandleEvent(ctx context.Context, event Event) {
 	select {
 	case <-ctx.Done():
 	case o.ch <- event:
 	}
 }
 
+// NewFileObserver создаёт нового наблюдателя для записи событий в файл.
 func NewFileObserver(
 	ctx context.Context,
 	logger *zap.Logger,
-	fileLogger *FileLogger,
+	fileLogger *fileLogger,
 	ch chan Event,
-) *FileObserver {
+) *fileObserver {
 	// писать в файл из одной горутины для избежания data race
 	go func() {
 		for {
@@ -33,9 +35,9 @@ func NewFileObserver(
 				logger.Info("stop file audit logger goroutine")
 				return
 			case event := <-ch:
-				entry := NewEntryFromAuditEvent(event)
+				entry := newEntryFromAuditEvent(event)
 
-				err := fileLogger.AddEntry(ctx, entry)
+				err := fileLogger.addEntry(ctx, entry)
 				if err != nil {
 					logger.Error("observer failed to add entry to file log", zap.Error(err))
 				}
@@ -44,7 +46,7 @@ func NewFileObserver(
 		}
 	}()
 
-	return &FileObserver{
+	return &fileObserver{
 		logger:     logger,
 		ch:         ch,
 		fileLogger: fileLogger,

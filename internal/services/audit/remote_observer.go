@@ -2,6 +2,7 @@ package audit
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"go.uber.org/zap"
@@ -9,25 +10,26 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/services/batcher"
 )
 
-type EntriesBatcher interface {
-	Add(ctx context.Context, entry Entry)
-}
-
+// RemoteObserver - наблюдатель для отправки логов в сторонний сервис.
 type RemoteObserver struct {
 	batcher *batcher.Batcher
 }
 
+// HandleEvent обрабатывает событие.
 func (o *RemoteObserver) HandleEvent(ctx context.Context, event Event) {
-	o.batcher.Add(ctx, NewEntryFromAuditEvent(event))
+	o.batcher.Add(ctx, newEntryFromAuditEvent(event))
 }
 
+// NewRemoteObserver создаёт нового наблюдателя.
 func NewRemoteObserver(
 	ctx context.Context,
 	logger *zap.Logger,
-	remoteLogger *RemoteLogger,
+	auditURL string,
 ) *RemoteObserver {
 
-	remoteBatchSender := NewRemoteBatchSender(remoteLogger)
+	remoteLogger := newRemoteLogger(&http.Client{}, auditURL)
+
+	remoteBatchSender := newRemoteBatchSender(remoteLogger)
 
 	batchSize := 200
 	batchDelay := 200 * time.Millisecond

@@ -8,12 +8,12 @@ import (
 	"net/http"
 )
 
-type RemoteLogger struct {
+type remoteLogger struct {
 	client  *http.Client
 	logsURL string
 }
 
-func (r *RemoteLogger) SendEntries(ctx context.Context, entries []Entry) error {
+func (r *remoteLogger) sendEntries(ctx context.Context, entries []entry) error {
 	rawEntries, err := json.Marshal(entries)
 	if err != nil {
 		return err
@@ -39,11 +39,12 @@ func (r *RemoteLogger) SendEntries(ctx context.Context, entries []Entry) error {
 	return nil
 }
 
-func NewRemoteLogger(
+// newRemoteLogger cоздаёт новый логгер для отправки событий во внешний сервис аудита.
+func newRemoteLogger(
 	client *http.Client,
 	logsURL string,
-) *RemoteLogger {
-	return &RemoteLogger{
+) *remoteLogger {
+	return &remoteLogger{
 		client:  client,
 		logsURL: logsURL,
 	}

@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// BatchParam - параметр, который требуется добавить в пачку.
 type BatchParam any
 
 // BatchExecutor выполняет операцию над собранной пачкой операций.
@@ -90,6 +91,7 @@ func (b *Batcher) Close() error {
 	}
 }
 
+// NewBatcher создаёт новый Batcher.
 func NewBatcher(
 	appCtx context.Context,
 	logger *zap.Logger,

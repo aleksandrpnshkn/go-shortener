@@ -5,42 +5,37 @@ import (
 	"errors"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/services/batcher"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
-	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
-type DeleteCode struct {
-	Code types.Code
-	User users.User
+type remoteBatchSender struct {
+	remoteLogger *remoteLogger
 }
 
-type RemoteBatchSender struct {
-	remoteLogger *RemoteLogger
-}
-
-func (r *RemoteBatchSender) GetName() string {
+// GetName возвращает имя.
+func (r *remoteBatchSender) GetName() string {
 	return "remote_audit_sender"
 }
 
-func (r *RemoteBatchSender) Execute(
+// Execute запускает обработку пачки событий.
+func (r *remoteBatchSender) Execute(
 	ctx context.Context,
 	params []batcher.BatchParam,
 ) error {
-	entries := make([]Entry, 0, len(params))
+	entries := make([]entry, 0, len(params))
 
 	for _, param := range params {
-		entry, ok := param.(Entry)
+		entry, ok := param.(entry)
 		if !ok {
 			return errors.New("passed param is not audit.Entry")
 		}
 		entries = append(entries, entry)
 	}
 
-	return r.remoteLogger.SendEntries(ctx, entries)
+	return r.remoteLogger.sendEntries(ctx, entries)
 }
 
-func NewRemoteBatchSender(remoteLogger *RemoteLogger) *RemoteBatchSender {
-	return &RemoteBatchSender{
+func newRemoteBatchSender(remoteLogger *remoteLogger) *remoteBatchSender {
+	return &remoteBatchSender{
 		remoteLogger: remoteLogger,
 	}
 }

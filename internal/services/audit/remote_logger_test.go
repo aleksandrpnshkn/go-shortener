@@ -30,8 +30,8 @@ func TestRemoteLogger(t *testing.T) {
 		)
 		defer srv.Close()
 
-		remoteLogger := NewRemoteLogger(srv.Client(), srv.URL)
-		err := remoteLogger.SendEntries(context.Background(), []Entry{
+		remoteLogger := newRemoteLogger(srv.Client(), srv.URL)
+		err := remoteLogger.sendEntries(context.Background(), []entry{
 			{
 				TimeTS:      time.Unix(12345678, 0).Unix(),
 				Action:      "shorten",

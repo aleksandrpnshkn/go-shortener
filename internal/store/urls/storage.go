@@ -22,14 +22,14 @@ type DeleteCode struct {
 
 // Storage - интерфейс для работы с хранилищем сокращённых ссылок.
 type Storage interface {
-	// Ping проверяет доступность БД.
+	// Ping проверяет доступность хранилища.
 	Ping(ctx context.Context) error
 
-	// Set сохраняет короткую ссылку в БД.
+	// Set сохраняет короткую ссылку в хранилище.
 	// А также проверяет наличие дублей.
 	Set(ctx context.Context, url ShortenedURL, userID types.UserID) (storedURL ShortenedURL, hasConflict bool, err error)
 
-	// SetMany сохраняет множество коротких ссылок в БД.
+	// SetMany сохраняет множество коротких ссылок в хранилищк.
 	// А также проверяет наличие дублей.
 	SetMany(ctx context.Context, urls map[string]ShortenedURL, userID types.UserID) (storedURLs map[string]ShortenedURL, hasConflicts bool, err error)
 
@@ -47,6 +47,7 @@ type Storage interface {
 	Close() error
 }
 
+// Ошибки хранилища URLов.
 var (
 	ErrCodeNotFound        = errors.New("code not found")
 	ErrOriginalURLNotFound = errors.New("original url not found")

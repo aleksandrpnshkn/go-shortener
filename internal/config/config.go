@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// Config содержит основные параметры запуска приложения
 type Config struct {
 	ServerAddr      string
 	PublicBaseURL   string
@@ -18,11 +19,13 @@ type Config struct {
 	EnablePprof     bool
 }
 
+// AuditConfig содержит основные параметры для логов аудита
 type AuditConfig struct {
 	File string
 	URL  string
 }
 
+// New создаёт новый конфиг
 func New() *Config {
 	fileStoragePath := ""
 	tempDir := os.TempDir()

@@ -11,6 +11,7 @@ import (
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// CodesReserver резервирует коды для сокращения новых URLов.
 type CodesReserver interface {
 	GetCode(ctx context.Context) (types.Code, error)
 }

@@ -7,17 +7,17 @@ import (
 	"os"
 )
 
-type FileLogger struct {
+type fileLogger struct {
 	file          *os.File
 	writer        *bufio.Writer
 	lineSeparator rune
 }
 
-func (f *FileLogger) AddEntry(ctx context.Context, entry Entry) error {
-	return f.AddEntries(ctx, []Entry{entry})
+func (f *fileLogger) addEntry(ctx context.Context, e entry) error {
+	return f.addEntries(ctx, []entry{e})
 }
 
-func (f *FileLogger) AddEntries(ctx context.Context, entries []Entry) error {
+func (f *fileLogger) addEntries(ctx context.Context, entries []entry) error {
 	lines := [][]byte{}
 
 	for _, entry := range entries {
@@ -38,7 +38,8 @@ func (f *FileLogger) AddEntries(ctx context.Context, entries []Entry) error {
 	return nil
 }
 
-func (f *FileLogger) Close() error {
+// Close закрывает файл.
+func (f *fileLogger) Close() error {
 	err := f.writer.Flush()
 	if err != nil {
 		return err
@@ -47,7 +48,7 @@ func (f *FileLogger) Close() error {
 	return f.file.Close()
 }
 
-func (f *FileLogger) writeLines(lines [][]byte) error {
+func (f *fileLogger) writeLines(lines [][]byte) error {
 	for _, line := range lines {
 		_, err := f.writer.Write(line)
 		if err != nil {
@@ -58,13 +59,14 @@ func (f *FileLogger) writeLines(lines [][]byte) error {
 	return nil
 }
 
-func NewFileLogger(fileName string) (*FileLogger, error) {
+// NewFileLogger создаёт новый файловый логгер для событий аудита
+func NewFileLogger(fileName string) (*fileLogger, error) {
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0664)
 	if err != nil {
 		return nil, err
 	}
 
-	fileLogger := &FileLogger{
+	fileLogger := &fileLogger{
 		file:          file,
 		writer:        bufio.NewWriter(file),
 		lineSeparator: '\n',

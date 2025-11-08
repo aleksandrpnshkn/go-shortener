@@ -140,7 +140,12 @@ goimports -local "github.com/aleksandrpnshkn/go-shortener" -w ./..
 go install -v golang.org/x/tools/cmd/godoc@latest 
 
 # пример доки для одного из пакетов
-go doc -all ./internal/middlewares/compress/
+go doc -all ./internal/middlewares/compress/ -play
+
+# web UI для документации
+godoc -http=:6060
+# По умолчанию godoc не отображает пакеты, расположенные в поддиректориях internal. 
+# Чтобы увидеть служебные пакеты, добавьте в браузере параметр ?m=all: например, http://localhost:6060/pkg/?m=all.
 ```
 
 ## Профилирование 

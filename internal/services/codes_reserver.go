@@ -5,9 +5,10 @@ import (
 	"errors"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
-	"go.uber.org/zap"
 )
 
 type CodesReserver interface {

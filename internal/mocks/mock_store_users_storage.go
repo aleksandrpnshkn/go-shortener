@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	users "github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	types "github.com/aleksandrpnshkn/go-shortener/internal/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -56,10 +57,10 @@ func (mr *MockUsersStorageMockRecorder) Close() *gomock.Call {
 }
 
 // Create mocks base method.
-func (m *MockUsersStorage) Create(ctx context.Context) (*users.User, error) {
+func (m *MockUsersStorage) Create(ctx context.Context) (types.UserID, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx)
-	ret0, _ := ret[0].(*users.User)
+	ret0, _ := ret[0].(types.UserID)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -71,7 +72,7 @@ func (mr *MockUsersStorageMockRecorder) Create(ctx any) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockUsersStorage) Get(ctx context.Context, userID int64) (*users.User, error) {
+func (m *MockUsersStorage) Get(ctx context.Context, userID types.UserID) (*users.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, userID)
 	ret0, _ := ret[0].(*users.User)

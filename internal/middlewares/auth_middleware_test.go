@@ -5,13 +5,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
-	"github.com/aleksandrpnshkn/go-shortener/internal/services"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"go.uber.org/zap"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 )
 
 func TestAuthMiddleware(t *testing.T) {
@@ -25,8 +26,8 @@ func TestAuthMiddleware(t *testing.T) {
 
 	t.Run("client sent valid token", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().ParseToken(gomock.Any(), testToken).Return(&testUser, nil)
-		handler := NewAuthMiddleware(zap.NewExample(), auther)(testOkHandler())
+		auther.EXPECT().ParseToken(gomock.Any(), testToken).Return(testUser.ID, nil)
+		handler := NewAuthMiddleware(zap.NewExample(), auther, true)(testOkHandler())
 
 		srv := httptest.NewServer(handler)
 		defer srv.Close()
@@ -44,7 +45,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 	t.Run("client sent invalid token", func(t *testing.T) {
 		auther := services.NewAuther(mocks.NewMockUsersStorage(ctrl), "secretkey")
-		handler := NewAuthMiddleware(zap.NewExample(), auther)(testOkHandler())
+		handler := NewAuthMiddleware(zap.NewExample(), auther, true)(testOkHandler())
 
 		srv := httptest.NewServer(handler)
 		defer srv.Close()
@@ -62,8 +63,8 @@ func TestAuthMiddleware(t *testing.T) {
 
 	t.Run("client not sent token", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().RegisterUser(gomock.Any()).Return(&testUser, "testToken", nil)
-		handler := NewAuthMiddleware(zap.NewExample(), auther)(testOkHandler())
+		auther.EXPECT().RegisterUser(gomock.Any()).Return(testUser.ID, "testToken", nil)
+		handler := NewAuthMiddleware(zap.NewExample(), auther, true)(testOkHandler())
 
 		srv := httptest.NewServer(handler)
 		defer srv.Close()

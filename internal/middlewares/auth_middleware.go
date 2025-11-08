@@ -3,14 +3,19 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/services"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"go.uber.org/zap"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
 const authCookieName = "auth_token"
 
-func NewAuthMiddleware(logger *zap.Logger, auther services.Auther) func(http.Handler) http.Handler {
+func NewAuthMiddleware(
+	logger *zap.Logger,
+	auther services.Auther,
+	enableRegistration bool,
+) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 			ctx := req.Context()
@@ -23,27 +28,29 @@ func NewAuthMiddleware(logger *zap.Logger, auther services.Auther) func(http.Han
 			}
 
 			var token string
-			var user *users.User
+			var userID types.UserID
 
 			if err == http.ErrNoCookie {
-				user, token, err = auther.RegisterUser(ctx)
-				if err != nil {
-					logger.Error("failed to register new user", zap.Error(err))
-					res.WriteHeader(http.StatusInternalServerError)
-					return
-				}
+				if enableRegistration {
+					userID, token, err = auther.RegisterUser(ctx)
+					if err != nil {
+						logger.Error("failed to register new user", zap.Error(err))
+						res.WriteHeader(http.StatusInternalServerError)
+						return
+					}
 
-				authCookie = &http.Cookie{
-					Name:  authCookieName,
-					Value: token,
+					authCookie = &http.Cookie{
+						Name:  authCookieName,
+						Value: token,
 
-					HttpOnly: true,
-					SameSite: http.SameSiteStrictMode,
-					Secure:   false,
+						HttpOnly: true,
+						SameSite: http.SameSiteStrictMode,
+						Secure:   false,
+					}
+					http.SetCookie(res, authCookie)
 				}
-				http.SetCookie(res, authCookie)
 			} else {
-				user, err = auther.ParseToken(ctx, authCookie.Value)
+				userID, err = auther.ParseToken(ctx, authCookie.Value)
 				if err != nil {
 					if err == services.ErrInvalidToken {
 						res.WriteHeader(http.StatusUnauthorized)
@@ -56,7 +63,7 @@ func NewAuthMiddleware(logger *zap.Logger, auther services.Auther) func(http.Han
 				}
 			}
 
-			req = req.WithContext(services.NewUserContext(ctx, user))
+			req = req.WithContext(services.NewUserContext(ctx, userID))
 
 			next.ServeHTTP(res, req)
 		})

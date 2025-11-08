@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"go.uber.org/zap"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 )
 
 func TestCodesReserver(t *testing.T) {

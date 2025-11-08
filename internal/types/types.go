@@ -5,3 +5,5 @@ type OriginalURL string
 type ShortURL string
 
 type Code string
+
+type UserID int64

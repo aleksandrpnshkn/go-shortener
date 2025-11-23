@@ -1,4 +1,4 @@
-// Пакет middlewares содержит основные middleware приложения
+// Package middlewares содержит основные middleware приложения
 package middlewares
 
 import (

@@ -1,3 +1,4 @@
+// Package logs это логи приложения
 package logs
 
 import (

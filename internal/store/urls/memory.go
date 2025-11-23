@@ -72,7 +72,7 @@ func (m *MemoryStorage) Close() error {
 	return nil
 }
 
-// NewFileStorage создаёт новое in memory хранилище для URLов.
+// NewMemoryStorage создаёт новое in memory хранилище для URLов.
 func NewMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
 		cache: map[types.Code]ShortenedURL{},

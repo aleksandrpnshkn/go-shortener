@@ -1,3 +1,4 @@
+// Package urls это интерфейс для работы с хранилищем коротких ссылок.
 package urls
 
 import (

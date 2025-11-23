@@ -41,7 +41,7 @@ func newDecompressReader(req io.ReadCloser) (*decompressReader, error) {
 	return decompressReader, nil
 }
 
-// NewCompressMiddleware создаёт middleware для распаковки тела запросов
+// NewDecompressMiddleware создаёт middleware для распаковки тела запросов
 func NewDecompressMiddleware(logger *zap.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {

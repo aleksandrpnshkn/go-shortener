@@ -1,9 +1,10 @@
+// Package types содержит типы данных для работы в приложении.
 package types
 
 // OriginalURL - оригинальный URL.
 type OriginalURL string
 
-// OriginalURL - сокращённый URL.
+// ShortURL - сокращённый URL.
 type ShortURL string
 
 // Code - code сокращённого URLа в хранилище.

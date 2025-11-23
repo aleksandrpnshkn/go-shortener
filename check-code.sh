@@ -22,4 +22,7 @@ go vet ./...
 goimports -local "github.com/aleksandrpnshkn/go-shortener" -l -e ./cmd/
 goimports -local "github.com/aleksandrpnshkn/go-shortener" -l -e ./internal/
 
+# go install honnef.co/go/tools/cmd/staticcheck@latest
+staticcheck ./...
+
 echo "Finished\n"

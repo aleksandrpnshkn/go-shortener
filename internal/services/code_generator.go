@@ -32,7 +32,7 @@ func (c *RandomCodeGenerator) Generate() types.Code {
 	return types.Code(randStringRunes(c.codeLength))
 }
 
-// Создать новый RandomCodeGenerator.
+// NewRandomCodeGenerator - создаёт новый CodeGenerator.
 func NewRandomCodeGenerator(codeLength int) CodeGenerator {
 	generator := RandomCodeGenerator{
 		codeLength: codeLength,

@@ -1,3 +1,4 @@
+// Package users это интерфейс для работы с хранилищем пользователей.
 package users
 
 import (

@@ -6,14 +6,22 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
 	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetURLByCode(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	existedCode := types.Code("tEsT")
 	fullURL := types.OriginalURL("http://example.com")
 
@@ -25,14 +33,20 @@ func TestGetURLByCode(t *testing.T) {
 	urlsStorage.Set(context.Background(), urls.ShortenedURL{
 		Code:        existedCode,
 		OriginalURL: fullURL,
-	}, &user)
+	}, user.ID)
+
+	followedPublisher := audit.NewPublisher([]audit.Observer{})
+	unshortener := services.NewUnshortener(urlsStorage, followedPublisher)
 
 	t.Run("existed short url", func(t *testing.T) {
+		auther := mocks.NewMockAuther(ctrl)
+		auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
+
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/"+string(existedCode), nil)
 		req.SetPathValue("code", string(existedCode))
 
-		GetURLByCode(urlsStorage)(w, req)
+		GetURLByCode(auther, unshortener)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()
@@ -44,13 +58,16 @@ func TestGetURLByCode(t *testing.T) {
 	})
 
 	t.Run("unknown short url", func(t *testing.T) {
+		auther := mocks.NewMockAuther(ctrl)
+		auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
+
 		unknownCode := "uNkNoWn"
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest(http.MethodGet, "/"+unknownCode, nil)
 		req.SetPathValue("code", unknownCode)
 
-		GetURLByCode(urlsStorage)(w, req)
+		GetURLByCode(auther, unshortener)(w, req)
 
 		res := w.Result()
 		err := res.Body.Close()

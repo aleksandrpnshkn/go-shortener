@@ -2,7 +2,6 @@ package services
 
 import (
 	"math/rand"
-	"strconv"
 
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
@@ -18,39 +17,25 @@ func randStringRunes(n int) string {
 	return string(b)
 }
 
+// CodeGenerator - интерфейс для генерации кодов.
 type CodeGenerator interface {
 	Generate() types.Code
 }
 
+// RandomCodeGenerator генерирует случайные коды.
 type RandomCodeGenerator struct {
 	codeLength int
 }
 
+// Generate генерирурет код.
 func (c *RandomCodeGenerator) Generate() types.Code {
 	return types.Code(randStringRunes(c.codeLength))
 }
 
+// Создать новый RandomCodeGenerator.
 func NewRandomCodeGenerator(codeLength int) CodeGenerator {
 	generator := RandomCodeGenerator{
 		codeLength: codeLength,
-	}
-	return &generator
-}
-
-type TestCodeGenerator struct {
-	testCodePrefix string
-	counter        int
-}
-
-func (c *TestCodeGenerator) Generate() types.Code {
-	c.counter++
-	return types.Code(c.testCodePrefix + strconv.Itoa(c.counter))
-}
-
-func NewTestGenerator(testCodePrefix string) CodeGenerator {
-	generator := TestCodeGenerator{
-		testCodePrefix: testCodePrefix,
-		counter:        0,
 	}
 	return &generator
 }

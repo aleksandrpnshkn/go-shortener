@@ -8,15 +8,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
-	"github.com/aleksandrpnshkn/go-shortener/internal/services"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
-	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
-	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"go.uber.org/zap"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/mocks"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services"
+	"github.com/aleksandrpnshkn/go-shortener/internal/services/audit"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/urls"
+	"github.com/aleksandrpnshkn/go-shortener/internal/store/users"
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
 func TestCreateShortURLPlain(t *testing.T) {
@@ -30,7 +32,7 @@ func TestCreateShortURLPlain(t *testing.T) {
 	code := types.Code("tEsT1")
 
 	auther := mocks.NewMockAuther(ctrl)
-	auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+	auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
 
 	codesReserver := mocks.NewMockCodesReserver(ctrl)
 	codesReserver.EXPECT().GetCode(gomock.Any()).Return(code, nil)
@@ -41,6 +43,7 @@ func TestCreateShortURLPlain(t *testing.T) {
 		codesReserver,
 		urlsStorage,
 		"http://localhost",
+		audit.NewPublisher([]audit.Observer{}),
 	)
 
 	t.Run("create short url", func(t *testing.T) {
@@ -76,7 +79,7 @@ func TestCreateShort(t *testing.T) {
 	}
 
 	auther := mocks.NewMockAuther(ctrl)
-	auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+	auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
 
 	tests := []struct {
 		testName        string
@@ -114,6 +117,7 @@ func TestCreateShort(t *testing.T) {
 			codesReserver,
 			urlsStorage,
 			"http://localhost",
+			audit.NewPublisher([]audit.Observer{}),
 		)
 
 		t.Run(test.testName, func(t *testing.T) {
@@ -148,7 +152,7 @@ func TestCreateShortDuplicate(t *testing.T) {
 	}
 
 	auther := mocks.NewMockAuther(ctrl)
-	auther.EXPECT().FromUserContext(gomock.Any()).Return(&user, nil)
+	auther.EXPECT().FromUserContext(gomock.Any()).Return(user.ID, nil)
 
 	codesReserver := mocks.NewMockCodesReserver(ctrl)
 	codesReserver.EXPECT().GetCode(gomock.Any()).Return(types.Code("tEsT1"), nil)
@@ -157,12 +161,13 @@ func TestCreateShortDuplicate(t *testing.T) {
 	urlsStorage.Set(context.Background(), urls.ShortenedURL{
 		Code:        "test123",
 		OriginalURL: originalURL,
-	}, &user)
+	}, user.ID)
 	shortener := services.NewShortener(
 		context.Background(),
 		codesReserver,
 		urlsStorage,
 		"http://localhost",
+		audit.NewPublisher([]audit.Observer{}),
 	)
 
 	t.Run("create duplicate url", func(t *testing.T) {

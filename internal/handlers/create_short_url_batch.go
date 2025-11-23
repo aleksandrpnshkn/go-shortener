@@ -5,9 +5,10 @@ import (
 	"io"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"github.com/aleksandrpnshkn/go-shortener/internal/services"
 	"github.com/aleksandrpnshkn/go-shortener/internal/types"
-	"go.uber.org/zap"
 )
 
 type originalURL struct {
@@ -20,6 +21,7 @@ type shortURL struct {
 	ShortURL      string `json:"short_url"`
 }
 
+// CreateShortURLBatch - хендлер для сокращения пачки URLов в JSON API.
 func CreateShortURLBatch(
 	shortener *services.Shortener,
 	logger *zap.Logger,

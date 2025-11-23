@@ -7,17 +7,22 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
+
+	"github.com/aleksandrpnshkn/go-shortener/internal/types"
 )
 
+// SQLStorage - SQL хранилище пользователей.
 type SQLStorage struct {
 	pgxpool *pgxpool.Pool
 }
 
+// Ping проверяет доступность хранилища.
 func (s *SQLStorage) Ping(ctx context.Context) error {
 	return s.pgxpool.Ping(ctx)
 }
 
-func (s *SQLStorage) Get(ctx context.Context, userID int64) (*User, error) {
+// Get достаёт пользователя из хранилища.
+func (s *SQLStorage) Get(ctx context.Context, userID types.UserID) (*User, error) {
 	var user User
 
 	row := s.pgxpool.QueryRow(ctx, "SELECT id FROM users WHERE id = $1", userID)
@@ -32,25 +37,27 @@ func (s *SQLStorage) Get(ctx context.Context, userID int64) (*User, error) {
 	return &user, nil
 }
 
-func (s *SQLStorage) Create(ctx context.Context) (*User, error) {
-	var userID int64
+// Create создаёт нового пользователя в хранилище.
+func (s *SQLStorage) Create(ctx context.Context) (types.UserID, error) {
+	var userID types.UserID
 
 	row := s.pgxpool.QueryRow(ctx, "INSERT INTO users (id) VALUES (DEFAULT) RETURNING id")
 	err := row.Scan(&userID)
 	if err != nil {
-		return nil, err
+		return GuestID, err
 	}
 
-	return &User{
-		ID: userID,
-	}, nil
+	return userID, nil
 }
 
+// Close закрывает соединение с хранилищем.
+// Вызывается при завершении работы программы.
 func (s *SQLStorage) Close() error {
 	s.pgxpool.Close()
 	return nil
 }
 
+// NewSQLStorage создаёт новое SQL-хранилище пользователей.
 func NewSQLStorage(ctx context.Context, databaseDSN string) (*SQLStorage, error) {
 	pool, err := pgxpool.New(ctx, databaseDSN)
 	if err != nil {

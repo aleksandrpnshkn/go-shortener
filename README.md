@@ -135,7 +135,7 @@ curl -X POST -i localhost:8082/api/audit-logs
 
 ## Как апнуть версию go
 ```bash
-go mod edit -go=1.25.4
+go mod edit -go=1.24.10
 go mod tidy
 ```
 

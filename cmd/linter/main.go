@@ -22,7 +22,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		osIdentName := getImportedNameForPackage("os", file.Imports)
 
 		var stack []ast.Node
-		ast.PreorderStack(file, stack, func(n ast.Node, stack []ast.Node) bool {
+		preorderStack(file, stack, func(n ast.Node, stack []ast.Node) bool {
 			switch n.(type) {
 			case *ast.CallExpr:
 				c := n.(*ast.CallExpr)
@@ -89,6 +89,27 @@ func getImportedNameForPackage(name string, imports []*ast.ImportSpec) string {
 	}
 
 	return name
+}
+
+// preorderStack это копия функции ast.PreorderStack из go1.25
+// https://cs.opensource.google/go/x/tools/+/refs/tags/v0.39.0:internal/astutil/util.go;l=34
+func preorderStack(root ast.Node, stack []ast.Node, f func(n ast.Node, stack []ast.Node) bool) {
+	before := len(stack)
+	ast.Inspect(root, func(n ast.Node) bool {
+		if n != nil {
+			if !f(n, stack) {
+				// Do not push, as there will be no corresponding pop.
+				return false
+			}
+			stack = append(stack, n) // push
+		} else {
+			stack = stack[:len(stack)-1] // pop
+		}
+		return true
+	})
+	if len(stack) != before {
+		panic("push/pop mismatch")
+	}
 }
 
 func main() {

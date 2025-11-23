@@ -14,12 +14,14 @@ func main() {
 	os.Exit(1)
 
 	var wg sync.WaitGroup
-	wg.Go(func() {
+	wg.Add(1)
+	go func() {
 		fmt.Println("Hello, goroutine!")
 		panic("oops goroutine")     // want "unexpected panic outside of main package"
 		log.Fatal("test goroutine") // want "unexpected log.Fatal outside of main package"
 		os.Exit(1)                  // want "unexpected os.Exit outside of main package"
-	})
+		wg.Done()
+	}()
 	wg.Wait()
 
 	// никакой пощады к IIFE

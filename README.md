@@ -135,6 +135,12 @@ go install golang.org/x/tools/cmd/goimports@latest
 goimports -local "github.com/aleksandrpnshkn/go-shortener" -w ./..
 ```
 
+## Как апнуть версию go
+```bash
+go mod edit -go=1.25.4
+go mod tidy
+```
+
 ## Документация
 ```bash
 go install -v golang.org/x/tools/cmd/godoc@latest 

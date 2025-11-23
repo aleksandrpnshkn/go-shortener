@@ -29,7 +29,7 @@ func (e *FollowEvent) getOriginalURL() types.OriginalURL {
 	return e.originalURL
 }
 
-// NewShortenedEvent создаёт новое событие открытия ссылки.
+// NewFollowEvent создаёт новое событие открытия ссылки.
 func NewFollowEvent(
 	time time.Time,
 	userID types.UserID,

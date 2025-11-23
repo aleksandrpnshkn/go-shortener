@@ -46,7 +46,7 @@ const ctxUserID ctxKey = "user"
 
 // ParseToken парсит JWT-токен.
 func (a *JwtAuther) ParseToken(ctx context.Context, tokenString string) (types.UserID, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (any, error) {
 		return []byte(a.secretKey), nil
 	})
 	if err != nil {

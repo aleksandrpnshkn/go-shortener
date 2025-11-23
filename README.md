@@ -140,11 +140,15 @@ curl -X POST -i localhost:8082/api/audit-logs
 При успехе будет вменяемый статус и имя совпавшего stub'а в заголовке.
 И можно чекнуть логи контейнера.
 
-## Форматирование
-
+## Форматирование и линтеры
 ```bash
-go install golang.org/x/tools/cmd/goimports@latest
-goimports -local "github.com/aleksandrpnshkn/go-shortener" -w ./..
+./check-code.sh
+```
+
+## Как апнуть версию go
+```bash
+go mod edit -go=1.24.10
+go mod tidy
 ```
 
 ## Документация

@@ -53,7 +53,7 @@ func (s *Shortener) Shorten(ctx context.Context, originalURL types.OriginalURL, 
 	return shortURL, hasConflict, nil
 }
 
-// Shorten сокращает множество URLов и сохраняет его в хранилище.
+// ShortenMany сокращает множество URLов и сохраняет его в хранилище.
 func (s *Shortener) ShortenMany(
 	ctx context.Context,
 	originalURLs map[string]types.OriginalURL,

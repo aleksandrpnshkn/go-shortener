@@ -152,7 +152,7 @@ func (s *SQLStorage) DeleteManyByUserID(ctx context.Context, commands []DeleteCo
 	return nil
 }
 
-// NewFileStorage создаёт новое SQL-хранилище для URLов.
+// NewSQLStorage создаёт новое SQL-хранилище для URLов.
 func NewSQLStorage(ctx context.Context, databaseDSN string) (*SQLStorage, error) {
 	pool, err := pgxpool.New(ctx, databaseDSN)
 	if err != nil {

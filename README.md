@@ -11,13 +11,13 @@
 
 Чтобы иметь возможность получать обновления автотестов и других частей шаблона, выполните команду:
 
-```
+```bash
 git remote add -m main template https://github.com/Yandex-Practicum/go-musthave-shortener-tpl.git
 ```
 
 Для обновления кода автотестов выполните команду:
 
-```
+```bash
 git fetch template && git checkout template/main .github
 ```
 
@@ -128,11 +128,9 @@ curl -X POST -i localhost:8082/api/audit-logs
 При успехе будет вменяемый статус и имя совпавшего stub'а в заголовке.
 И можно чекнуть логи контейнера.
 
-## Форматирование
-
+## Форматирование и линтеры
 ```bash
-go install golang.org/x/tools/cmd/goimports@latest
-goimports -local "github.com/aleksandrpnshkn/go-shortener" -w ./..
+./check-code.sh
 ```
 
 ## Как апнуть версию go
